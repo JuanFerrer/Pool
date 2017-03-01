@@ -5,7 +5,7 @@
 *[Next notification should be here. Don't delete this]*
 
 **Help**
-- [How to make a new branch in GitHub]()
+- [How to make a new branch in GitHub](http://htmlpreview.github.io/?https://github.com/JuanFerrer/Pool/blob/master/Documentation/NewBranch.html)
 
 Add more as you see fit.
 Happy coding! =]
