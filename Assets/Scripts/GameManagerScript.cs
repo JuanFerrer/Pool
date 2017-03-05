@@ -62,7 +62,6 @@ public class GameManagerScript : MonoBehaviour
     public GameObject lightPrefab;                      // Prefab of light
     private const int LIGHTS_NO = 4;
 
-
     // FOR DEBUG PURPOSES
     private void Start()
     {
