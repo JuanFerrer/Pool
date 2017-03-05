@@ -34,6 +34,8 @@ namespace Pool
                 {
                     HitBall();
                 }
+
+                UpdateVisualAid();
             }
 
             // Toggle view
@@ -80,6 +82,12 @@ namespace Pool
             mainCam.transform.SetParent(null);
 
             gameManager.GetComponent<GameManagerScript>().playerHasControl = false;
+        }
+
+        // Draw visual aid on the floor
+        void UpdateVisualAid()
+        {
+            //TO DO
         }
     }
 }

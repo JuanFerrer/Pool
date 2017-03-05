@@ -22,7 +22,7 @@ public class GameManagerScript : MonoBehaviour
     public Vector3 tableRot;                                    // Initial rotation of table
     private GameObject table;                                   // Reference to table
 
-    [Header("Ball")]
+    [Header("Balls")]
     public GameObject ballPrefab;                               // Prefab of ball
     public Vector3 ballPos;                                     // Initial position of balls
     private const int BALLS_NO = 16;                            // Amount of balls
@@ -41,11 +41,11 @@ public class GameManagerScript : MonoBehaviour
     [Range(400, 4000)]public float forceApplied;        // Force applied to ball on hit
     [HideInInspector] public bool playerHasControl;     // Flag player is in control
 
-    static private int PLAYER_NO;        // Amount of players
-    [HideInInspector] public int currentPlayer;
-    [HideInInspector] Player[] players;
+    static private int PLAYER_NO;                       // Amount of players
+    [HideInInspector] public int currentPlayer;         // Reference to current players
+    [HideInInspector] Player[] players;                 // References to all players
 
-    [Header("Camera")]
+    [Header("Cameras")]
     public GameObject camPrefab;                        // Prefab of cam
     private GameObject mainCam;                         // Reference to main camera object
     private GameObject secCam;                          // Reference to second camera object
@@ -54,8 +54,13 @@ public class GameManagerScript : MonoBehaviour
     private Camera secCamera;                           // Reference to second camera component
     public Vector3 secCamPos;                           // Position of second camera
     public Vector3 secCamRot;                           // Rotation of second camera
+    public int secCamSize;                              // Size of orthographic camera
     public float camMaxY;
     public float camMinY;
+
+    [Header("Lights")]
+    public GameObject lightPrefab;                      // Prefab of light
+    private const int LIGHTS_NO = 4;
 
 
     // FOR DEBUG PURPOSES
@@ -124,6 +129,23 @@ public class GameManagerScript : MonoBehaviour
 
         // Get cameras and referecens
         SetupCameras();
+
+        // Get and instantiate lights
+        //SetupLights();
+    }
+
+    // Instantiate all lights and position them
+    private void SetupLights()
+    {
+        float[] xOffset = {5, 5, -5, -5 };
+        float[] zOffset = {5, -5, 5, -5 };
+        GameObject[] lights = new GameObject[LIGHTS_NO];
+
+
+        for (int i = 0; i < lights.Length; ++i)
+        {
+            lights[i] = (GameObject)Instantiate(lightPrefab, new Vector3(xOffset[i], 5.0f, zOffset[i]), Quaternion.identity);
+        }
     }
 
     // Setup all cameras and references
@@ -132,10 +154,13 @@ public class GameManagerScript : MonoBehaviour
         // Has been setup in SetupPlayer (appended as a child of player)
         mainCamera = mainCam.GetComponent<Camera>();
 
-        secCam = (GameObject)Instantiate(camPrefab, secCamPos, Quaternion.Euler(90.0f, 0.0f, 90.0f));
+        secCam = (GameObject)Instantiate(camPrefab, secCamPos, Quaternion.Euler(secCamRot));
         secCam.tag = "SecondCam";
 
         secCamera = secCam.GetComponent<Camera>();
+        secCamera.orthographic = true;
+        secCamera.orthographicSize = secCamSize;
+        secCamera.GetComponent<AudioListener>().enabled = false;
 
         mainCamera.enabled = true;
         secCamera.enabled = false;
