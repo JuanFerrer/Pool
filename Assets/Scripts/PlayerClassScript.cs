@@ -3,8 +3,6 @@ using System.Collections;
 
 namespace Pool
 {
-    public enum BallType { SPOT, STRIPE };
-
     public class Player
     {
         private int mPlayerNo;

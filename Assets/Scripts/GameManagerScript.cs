@@ -60,7 +60,8 @@ public class GameManagerScript : MonoBehaviour
 
     [Header("Lights")]
     public GameObject lightPrefab;                      // Prefab of light
-    private const int LIGHTS_NO = 4;
+    public Vector3 lightPos;                            // Initial position of light
+    private const int LIGHTS_NO = 4;                    // Amount of lights in scene
 
     // FOR DEBUG PURPOSES
     private void Start()
@@ -136,15 +137,17 @@ public class GameManagerScript : MonoBehaviour
     // Instantiate all lights and position them
     private void SetupLights()
     {
-        float[] xOffset = {5, 5, -5, -5 };
-        float[] zOffset = {5, -5, 5, -5 };
-        GameObject[] lights = new GameObject[LIGHTS_NO];
+        //float[] xOffset = {5, 5, -5, -5 };
+        //float[] zOffset = {5, -5, 5, -5 };
+        //GameObject[] lights = new GameObject[LIGHTS_NO];
 
 
-        for (int i = 0; i < lights.Length; ++i)
-        {
-            lights[i] = (GameObject)Instantiate(lightPrefab, new Vector3(xOffset[i], 5.0f, zOffset[i]), Quaternion.identity);
-        }
+        //for (int i = 0; i < lights.Length; ++i)
+        //{
+        //    lights[i] = (GameObject)Instantiate(lightPrefab, new Vector3(xOffset[i], 5.0f, zOffset[i]), Quaternion.identity);
+        //}
+
+        //Instantiate(lightPrefab, lightPos, Quaternion.identity);
     }
 
     // Setup all cameras and references
