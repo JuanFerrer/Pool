@@ -1,16 +1,28 @@
-﻿using UnityEngine;
+﻿//
+//  Instantiated on match start
+//  One of it's responsibilities is to instantiate and control the UI object
+//  
+
+
+using UnityEngine;
 using System.Collections.Generic;
-using Pool;
+
+using Pool; // Pool namespace
 
 public class GameManagerScript : MonoBehaviour
 {
+    bool DEBUG_shouldChangePlayer = false;
+    bool isGameReady = false;
+
+    public enum GameType { ENGLISH_POOL, AMERICAN_POOL, SNOOKER };
 
     [Header("Table")]
     public GameObject tablePrefab;                              // Prefab of table
     public Vector3 tablePos;                                    // Initial position of table
     public Vector3 tableRot;                                    // Initial rotation of table
+    private GameObject table;                                   // Reference to table
 
-    [Header("Ball")]
+    [Header("Balls")]
     public GameObject ballPrefab;                               // Prefab of ball
     public Vector3 ballPos;                                     // Initial position of balls
     private const int BALLS_NO = 16;                            // Amount of balls
@@ -29,50 +41,85 @@ public class GameManagerScript : MonoBehaviour
     [Range(400, 4000)]public float forceApplied;        // Force applied to ball on hit
     [HideInInspector] public bool playerHasControl;     // Flag player is in control
 
-    public const int PLAYER_NO = 2;                     // Amount of players
-    [HideInInspector] public int currentPlayer;
-    [HideInInspector] Player[] players = new Player[PLAYER_NO];
+    static private int PLAYER_NO;                       // Amount of players
+    [HideInInspector] public int currentPlayer;         // Reference to current players
+    [HideInInspector] Player[] players;                 // References to all players
 
-    [Header("Camera")]
+    [Header("Cameras")]
     public GameObject camPrefab;                        // Prefab of cam
-    private GameObject mainCam;                         // Reference to main camera
+    private GameObject mainCam;                         // Reference to main camera object
+    private GameObject secCam;                          // Reference to second camera object
 
-    private Camera mainCamera;
-    private Camera secCamera;
+    private Camera mainCamera;                          // Reference to main camera component
+    private Camera secCamera;                           // Reference to second camera component
+    public Vector3 secCamPos;                           // Position of second camera
+    public Vector3 secCamRot;                           // Rotation of second camera
+    public int secCamSize;                              // Size of orthographic camera
     public float camMaxY;
     public float camMinY;
 
+    [Header("Lights")]
+    public GameObject lightPrefab;                      // Prefab of light
+    public Vector3 lightPos;                            // Initial position of light
+    private const int LIGHTS_NO = 4;                    // Amount of lights in scene
+
+    // FOR DEBUG PURPOSES
+    private void Start()
+    {
+        StartGame(GameType.ENGLISH_POOL, 0, 2);
+    }
 
     // Use this for initialization
-    void Start ()
+    public void StartGame(GameType type, int arenaIndex, int playerAmount)
     {
+        SetupVariables(type, arenaIndex, playerAmount);
         SetupScene();
-	}
-	
-	// Update is called once per frame
-	void FixedUpdate ()
+        InstantiateUI();
+        isGameReady = true;
+    }
+
+    // Update is called once per frame
+    // Game loop, if you will
+    void FixedUpdate()
     {
-        if (!playerHasControl && !AnyBallMoving())
+        if (isGameReady)
         {
-            Debug.Log("Return control to player");
-            if (ShouldChangePlayer())
+            if (Input.GetKeyDown(KeyCode.C))
+                DEBUG_shouldChangePlayer = true;
+
+            if (!playerHasControl && !AnyBallMoving())
             {
-                ChangePlayer();
+                if (ShouldChangePlayer())
+                {
+                    ChangePlayer();
+                }
+
+                GiveControlToPlayer();
             }
 
-            GiveControlToPlayer();
+            if (IsWinCondition())
+            {
+                EndGame();
+            }
         }
-	}
+    }
 
     /*******************/
     /*      SETUP      */
     /*******************/
 
-    // Other functions
-    void SetupScene()
+    // Get variables ready for instantiation
+    private void SetupVariables(GameType type, int arenaIndex, int playerAmount)
+    {
+        PLAYER_NO = playerAmount;
+        players = new Player[PLAYER_NO];
+    }
+
+    // Setup scene game objects and variables
+    private void SetupScene()
     {
         // Create table
-        Instantiate(tablePrefab, tablePos, Quaternion.Euler(tableRot));
+        table = Instantiate(tablePrefab, tablePos, Quaternion.Euler(tableRot));
 
         // Setup player  
         SetupPlayer();
@@ -82,17 +129,47 @@ public class GameManagerScript : MonoBehaviour
 
         // Get cameras and referecens
         SetupCameras();
+
+        // Get and instantiate lights
+        //SetupLights();
+    }
+
+    // Instantiate all lights and position them
+    private void SetupLights()
+    {
+        //float[] xOffset = {5, 5, -5, -5 };
+        //float[] zOffset = {5, -5, 5, -5 };
+        //GameObject[] lights = new GameObject[LIGHTS_NO];
+
+
+        //for (int i = 0; i < lights.Length; ++i)
+        //{
+        //    lights[i] = (GameObject)Instantiate(lightPrefab, new Vector3(xOffset[i], 5.0f, zOffset[i]), Quaternion.identity);
+        //}
+
+        //Instantiate(lightPrefab, lightPos, Quaternion.identity);
     }
 
     // Setup all cameras and references
-    void SetupCameras()
+    private void SetupCameras()
     {
+        // Has been setup in SetupPlayer (appended as a child of player)
         mainCamera = mainCam.GetComponent<Camera>();
-        secCamera = GameObject.FindGameObjectWithTag("SecondCam").GetComponent<Camera>();
+
+        secCam = (GameObject)Instantiate(camPrefab, secCamPos, Quaternion.Euler(secCamRot));
+        secCam.tag = "SecondCam";
+
+        secCamera = secCam.GetComponent<Camera>();
+        secCamera.orthographic = true;
+        secCamera.orthographicSize = secCamSize;
+        secCamera.GetComponent<AudioListener>().enabled = false;
+
+        mainCamera.enabled = true;
+        secCamera.enabled = false;
     }
 
     // Put all balls in position as in a rack
-    void SetRack()
+    private void SetRack()
     {
         float[] xOffset = { 0.0f,
                         -0.5f,  0.5f,
@@ -104,7 +181,7 @@ public class GameManagerScript : MonoBehaviour
                      2.0f, 2.0f, 2.0f,
                   3.0f, 3.0f,3.0f, 3.0f,
                4.0f, 4.0f, 4.0f, 4.0f, 4.0f};
-        
+
         for (int i = 1; i < BALLS_NO; ++i)
         {
 
@@ -137,7 +214,7 @@ public class GameManagerScript : MonoBehaviour
     }
 
     // Create player with camera
-    void SetupPlayer()
+    private void SetupPlayer()
     {
         currentPlayer = 0;
 
@@ -168,12 +245,18 @@ public class GameManagerScript : MonoBehaviour
         player.GetComponent<PlayerControllerScript>().camMinY = camMinY;
     }
 
+    // Instantiate UI object
+    private void InstantiateUI()
+    {
+
+    }
+
     /*******************/
     /*     PLAYER      */
     /*******************/
 
     // Ask every ball to see if they're still moving
-    bool AnyBallMoving()
+    private bool AnyBallMoving()
     {
         for (int i = 0; i < BALLS_NO; ++i)
         {
@@ -188,7 +271,7 @@ public class GameManagerScript : MonoBehaviour
     }
 
     // Return control to current player
-    void GiveControlToPlayer()
+    private void GiveControlToPlayer()
     {
         playerHasControl = true;
         player.GetComponent<PlayerControllerScript>().ResetPlayerView();
@@ -198,28 +281,32 @@ public class GameManagerScript : MonoBehaviour
 
     // Check rules and see if changing the player is needed
     // Heuristics/game rules
-    bool ShouldChangePlayer()
+    private bool ShouldChangePlayer()
     {
-        return false;
+        bool temp = DEBUG_shouldChangePlayer;
+        DEBUG_shouldChangePlayer = false;
+        return temp;
     }
 
     // Change player, select next ball, update text, etc.
-    void ChangePlayer()
+    private void ChangePlayer()
     {
+
         // TODO
         currentPlayer = (currentPlayer + 1) % PLAYER_NO;
+        Debug.Log("Turn of player " + currentPlayer);
 
         SelectNextBallForPlayer();
     }
 
     // Make nextBall be the appropriate for the player
-    void SelectNextBallForPlayer()
+    private void SelectNextBallForPlayer()
     {
         // TODO
     }
 
     // Change rendering camera
-    public void ToggleView()
+    public void ToggleCamera()
     {
         if (mainCamera.enabled == true)
         {
@@ -231,5 +318,33 @@ public class GameManagerScript : MonoBehaviour
             mainCamera.enabled = true;
             secCamera.enabled = false;
         }
+    }
+
+    /******************/
+    /*     LOGIC      */
+    /******************/
+
+    // Check if last turn, player won or lost
+    // Heuristics/game rules
+    private bool IsWinCondition()
+    {
+        // TODO
+        return false;
+    }
+
+    // Give control back to MainMenu? TBD
+    private void EndGame()
+    {
+
+    }
+
+    /***************/
+    /*     UI      */
+    /***************/
+
+    // Meant to be used by the UI object. Returns score of current player
+    public int GetPlayerScore()
+    {
+        return players[currentPlayer].GetScore();
     }
 }

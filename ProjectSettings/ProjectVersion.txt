@@ -1,2 +1,5 @@
-m_EditorVersion: 5.2.2f1
-m_StandardAssetsVersion: 0
+<<<<<<< HEAD
+m_EditorVersion: 5.5.2f1
+=======
+m_EditorVersion: 5.5.0f3
+>>>>>>> origin/dev_juan

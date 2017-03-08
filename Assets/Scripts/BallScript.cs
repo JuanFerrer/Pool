@@ -1,21 +1,33 @@
 ﻿using UnityEngine;
 using System.Collections;
 
-public class BallScript : MonoBehaviour {
+namespace Pool
+{
+    public enum BallType { SPOT, STRIPE };
 
-    [HideInInspector] public bool isMoving;
 
-	// Use this for initialization
-	void Awake ()
+    public class BallScript : MonoBehaviour
     {
-        isMoving = false;
-	}
 
-    void FixedUpdate()
-    {
-        if (!isMoving && GetComponent<Rigidbody>().velocity.magnitude > 0)
+        [HideInInspector] public bool isMoving;
+
+        public  int BallNo { get; set; }
+        public BallType BallType { get; set; }
+
+
+
+        // Use this for initialization
+        void Awake()
         {
-            isMoving = true;
+            isMoving = false;
+        }
+
+        void FixedUpdate()
+        {
+            if (!isMoving && GetComponent<Rigidbody>().velocity.magnitude > 0)
+            {
+                isMoving = true;
+            }
         }
     }
 }
