@@ -14,7 +14,11 @@ namespace Pool
         public  int BallNo { get; set; }
         public BallType BallType { get; set; }
 
-
+        public AudioClip cueHit;
+        public AudioClip ballHit;
+        public AudioClip cushionHit;
+        public AudioClip pocketDrop;
+        [HideInInspector] public AudioSource audioSource; 
 
         // Use this for initialization
         void Awake()
@@ -27,6 +31,27 @@ namespace Pool
             if (!isMoving && GetComponent<Rigidbody>().velocity.magnitude > 0)
             {
                 isMoving = true;
+            }
+        }
+
+        void OnTriggerEnter(Collider other)
+        {
+             GetComponent<Rigidbody>().constraints = RigidbodyConstraints.None;
+        }
+        void OnTriggerExit(Collider other)
+        {
+            audioSource.clip = pocketDrop;
+            audioSource.volume = 1.0f;
+            audioSource.Play();
+        }
+
+        void OnCollisionEnter(Collision other)
+        {
+            if (other.gameObject.tag == "Ball" || other.gameObject.tag == "Player")
+            {
+                audioSource.clip = ballHit;
+                audioSource.volume = Mathf.Log10(this.gameObject.GetComponent<Rigidbody>().velocity.magnitude);
+                audioSource.Play();
             }
         }
     }

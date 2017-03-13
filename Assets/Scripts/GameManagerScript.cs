@@ -38,7 +38,7 @@ public class GameManagerScript : MonoBehaviour
     public Vector3 playerPos;                           // Initial position of player
     private GameObject player;                          // Reference to current player game object
     public float rotationSpeed;                         // Rotation speed 
-    [Range(400, 4000)]public float forceApplied;        // Force applied to ball on hit
+    [Range(0, 2000)]public float forceApplied;        // Force applied to ball on hit
     [HideInInspector] public bool playerHasControl;     // Flag player is in control
 
     static private int PLAYER_NO;                       // Amount of players
@@ -54,7 +54,7 @@ public class GameManagerScript : MonoBehaviour
     private Camera secCamera;                           // Reference to second camera component
     public Vector3 secCamPos;                           // Position of second camera
     public Vector3 secCamRot;                           // Rotation of second camera
-    public int secCamSize;                              // Size of orthographic camera
+    public float secCamSize;                              // Size of orthographic camera
     public float camMaxY;
     public float camMinY;
 
@@ -177,21 +177,29 @@ public class GameManagerScript : MonoBehaviour
                   -1.5f, -0.5f, 0.5f, 1.5f,
                -2.0f, -1.0f, 0.0f, 1.0f, 2.0f};
         float[] zOffset = { 0.0f,
-                        1.0f,  1.0f,
-                     2.0f, 2.0f, 2.0f,
-                  3.0f, 3.0f,3.0f, 3.0f,
-               4.0f, 4.0f, 4.0f, 4.0f, 4.0f};
+                        0.86f,  0.86f,
+                     1.75f, 1.75f, 1.75f,
+                  2.62f, 2.62f, 2.62f, 2.62f,
+               3.5f, 3.5f, 3.5f, 3.5f, 3.5f};
+
+        GameObject newBall;
 
         for (int i = 1; i < BALLS_NO; ++i)
         {
 
-            GameObject newBall = (GameObject)Instantiate(ballPrefab, new Vector3(ballPos.x + xOffset[i - 1], ballPos.y, ballPos.z + zOffset[i - 1]), Quaternion.Euler(Random.Range(0, 360), Random.Range(0, 360), Random.Range(0, 360)));
+            newBall = (GameObject)Instantiate(ballPrefab, new Vector3(ballPos.x + xOffset[i - 1], ballPos.y, ballPos.z + zOffset[i - 1]), Quaternion.Euler(Random.Range(0, 360), Random.Range(0, 360), Random.Range(0, 360)));
 
             newBall.GetComponent<MeshRenderer>().material = ballMaterial[i];
 
+            newBall.GetComponent<BallScript>().audioSource = newBall.GetComponent<AudioSource>();
+
+            newBall.tag = "Ball";
+
             balls[i] = newBall;  // Uninitialised?
+
+     
         }
-        player.GetComponent<PlayerControllerScript>().nextBall = balls[1];
+        //player.GetComponent<PlayerControllerScript>().nextBall = balls[1];
 
         //    Instantiate(ballPrefab, ballPos, Quaternion.identity);
         //    Instantiate(ballPrefab, new Vector3(ballPos.x - 0.5f, ballPos.y, ballPos.z + 1.0f), Quaternion.identity);
@@ -243,6 +251,7 @@ public class GameManagerScript : MonoBehaviour
         player.GetComponent<PlayerControllerScript>().gameManager = this.gameObject;
         player.GetComponent<PlayerControllerScript>().camMaxY = camMaxY;
         player.GetComponent<PlayerControllerScript>().camMinY = camMinY;
+        player.GetComponent<PlayerControllerScript>().audioSource = player.GetComponent<AudioSource>();
     }
 
     // Instantiate UI object

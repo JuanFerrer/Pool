@@ -1,10 +1,18 @@
 fileFormatVersion: 2
 guid: 9098e724fe9c73e4f9091133829f8711
-timeCreated: 1486556488
+timeCreated: 1489429139
 licenseType: Free
 MonoImporter:
   serializedVersion: 2
-  defaultReferences: []
+  defaultReferences:
+  - cueHit: {fileID: 8300000, guid: 2ce4d0ad30399834c9e0d43eddba0eee, type: 3}
+  - ballHit: {fileID: 8300000, guid: 2f18309a9cb6a0147989cb936784f41e, type: 3}
+  - cushionHit: {instanceID: 0}
+  - pocketDrop: {fileID: 8300000, guid: bf3d425b602718a48806b86eaa4cd10b, type: 3}
+  - audioSource: {instanceID: 0}
+  - mainCam: {instanceID: 0}
+  - gameManager: {instanceID: 0}
+  - nextBall: {instanceID: 0}
   executionOrder: 0
   icon: {instanceID: 0}
   userData: 
