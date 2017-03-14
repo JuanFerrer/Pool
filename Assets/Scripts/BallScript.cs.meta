@@ -1,10 +1,15 @@
 fileFormatVersion: 2
 guid: d330d7a572f262f4ebcfe097c73dac14
-timeCreated: 1486760309
+timeCreated: 1489429131
 licenseType: Free
 MonoImporter:
   serializedVersion: 2
-  defaultReferences: []
+  defaultReferences:
+  - cueHit: {fileID: 8300000, guid: 2ce4d0ad30399834c9e0d43eddba0eee, type: 3}
+  - ballHit: {fileID: 8300000, guid: 2f18309a9cb6a0147989cb936784f41e, type: 3}
+  - cushionHit: {instanceID: 0}
+  - pocketDrop: {fileID: 8300000, guid: bf3d425b602718a48806b86eaa4cd10b, type: 3}
+  - audioSource: {instanceID: 0}
   executionOrder: 0
   icon: {instanceID: 0}
   userData: 

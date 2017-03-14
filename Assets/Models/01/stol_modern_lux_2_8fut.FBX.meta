@@ -1,0 +1,275 @@
+fileFormatVersion: 2
+guid: 47a5dcb00f925564e9150bb214d75eae
+timeCreated: 1489353284
+licenseType: Free
+ModelImporter:
+  serializedVersion: 19
+  fileIDToRecycleName:
+    100000: Camera001
+    100002: Camera001.Target
+    100004: kievnitsa PARUS
+    100006: kiy_007
+    100008: kiy_008
+    100010: kiy_1
+    100012: kiy_2
+    100014: kiy_3
+    100016: kiy_4
+    100018: mel_003
+    100020: mel_2
+    100022: Object034
+    100024: Object035
+    100026: Object036
+    100028: Object037
+    100030: Object038
+    100032: Object039
+    100034: Object040
+    100036: Object041
+    100038: Object042
+    100040: Object043
+    100042: Object044
+    100044: Object045
+    100046: Object046
+    100048: Object047
+    100050: Object048
+    100052: Object049
+    100054: Object050
+    100056: Shape003
+    100058: shari_006
+    100060: shari_007
+    100062: shari_008
+    100064: shari_009
+    100066: shari_2
+    100068: shari_2 1
+    100070: "shari_2\u0430"
+    100072: "shari_2\u0430001"
+    100074: shari_3
+    100076: shari_3 1
+    100078: "shari_3\u0430"
+    100080: shari_4
+    100082: stol_modern_lux_2_8fut
+    100084: //RootNode
+    100086: stol_modern_lux_2_8fut1
+    100088: stol_modern_lux_2_8fut_MeshPart0
+    100090: stol_modern_lux_2_8fut_MeshPart1
+    400000: Camera001
+    400002: Camera001.Target
+    400004: kievnitsa PARUS
+    400006: kiy_007
+    400008: kiy_008
+    400010: kiy_1
+    400012: kiy_2
+    400014: kiy_3
+    400016: kiy_4
+    400018: mel_003
+    400020: mel_2
+    400022: Object034
+    400024: Object035
+    400026: Object036
+    400028: Object037
+    400030: Object038
+    400032: Object039
+    400034: Object040
+    400036: Object041
+    400038: Object042
+    400040: Object043
+    400042: Object044
+    400044: Object045
+    400046: Object046
+    400048: Object047
+    400050: Object048
+    400052: Object049
+    400054: Object050
+    400056: Shape003
+    400058: shari_006
+    400060: shari_007
+    400062: shari_008
+    400064: shari_009
+    400066: shari_2
+    400068: shari_2 1
+    400070: "shari_2\u0430"
+    400072: "shari_2\u0430001"
+    400074: shari_3
+    400076: shari_3 1
+    400078: "shari_3\u0430"
+    400080: shari_4
+    400082: stol_modern_lux_2_8fut
+    400084: //RootNode
+    400086: stol_modern_lux_2_8fut1
+    400088: stol_modern_lux_2_8fut_MeshPart0
+    400090: stol_modern_lux_2_8fut_MeshPart1
+    2300000: kiy_007
+    2300002: kiy_008
+    2300004: kiy_1
+    2300006: kiy_2
+    2300008: kiy_3
+    2300010: kiy_4
+    2300012: mel_003
+    2300014: mel_2
+    2300016: Object034
+    2300018: Object035
+    2300020: Object036
+    2300022: Object037
+    2300024: Object038
+    2300026: Object039
+    2300028: Object040
+    2300030: Object041
+    2300032: Object042
+    2300034: Object043
+    2300036: Object044
+    2300038: Object045
+    2300040: Object046
+    2300042: Object047
+    2300044: Object048
+    2300046: Object049
+    2300048: Object050
+    2300050: Shape003
+    2300052: shari_007
+    2300054: shari_008
+    2300056: shari_2 1
+    2300058: "shari_2\u0430"
+    2300060: "shari_2\u0430001"
+    2300062: shari_3 1
+    2300064: "shari_3\u0430"
+    2300066: shari_4
+    2300068: stol_modern_lux_2_8fut_MeshPart0
+    2300070: stol_modern_lux_2_8fut_MeshPart1
+    3300000: kiy_007
+    3300002: kiy_008
+    3300004: kiy_1
+    3300006: kiy_2
+    3300008: kiy_3
+    3300010: kiy_4
+    3300012: mel_003
+    3300014: mel_2
+    3300016: Object034
+    3300018: Object035
+    3300020: Object036
+    3300022: Object037
+    3300024: Object038
+    3300026: Object039
+    3300028: Object040
+    3300030: Object041
+    3300032: Object042
+    3300034: Object043
+    3300036: Object044
+    3300038: Object045
+    3300040: Object046
+    3300042: Object047
+    3300044: Object048
+    3300046: Object049
+    3300048: Object050
+    3300050: Shape003
+    3300052: shari_007
+    3300054: shari_008
+    3300056: shari_2 1
+    3300058: "shari_2\u0430"
+    3300060: "shari_2\u0430001"
+    3300062: shari_3 1
+    3300064: "shari_3\u0430"
+    3300066: shari_4
+    3300068: stol_modern_lux_2_8fut_MeshPart0
+    3300070: stol_modern_lux_2_8fut_MeshPart1
+    4300000: shari_2
+    4300002: "shari_2\u0430"
+    4300004: shari_4
+    4300006: kiy_1
+    4300008: kiy_2
+    4300010: kiy_3
+    4300012: kiy_4
+    4300014: Shape003
+    4300016: mel_2
+    4300018: kiy_007
+    4300020: kiy_008
+    4300022: stol_modern_lux_2_8fut_MeshPart0
+    4300024: stol_modern_lux_2_8fut_MeshPart1
+    4300026: Object034
+    4300028: Object035
+    4300030: Object036
+    4300032: Object037
+    4300034: Object038
+    4300036: Object039
+    4300038: Object040
+    4300040: Object041
+    4300042: Object042
+    4300044: Object043
+    4300046: Object044
+    4300048: Object045
+    4300050: Object046
+    4300052: Object047
+    4300054: Object048
+    4300056: Object049
+    4300058: shari_007
+    4300060: mel_003
+    4300062: shari_008
+    4300064: "shari_2\u0430001"
+    4300066: shari_3
+    4300068: "shari_3\u0430"
+    4300070: Object050
+  materials:
+    importMaterials: 1
+    materialName: 0
+    materialSearch: 1
+  animations:
+    legacyGenerateAnimations: 4
+    bakeSimulation: 0
+    resampleCurves: 1
+    optimizeGameObjects: 0
+    motionNodeName: 
+    animationImportErrors: 
+    animationImportWarnings: 
+    animationRetargetingWarnings: 
+    animationDoRetargetingWarnings: 0
+    animationCompression: 1
+    animationRotationError: 0.5
+    animationPositionError: 0.5
+    animationScaleError: 0.5
+    animationWrapMode: 0
+    extraExposedTransformPaths: []
+    clipAnimations: []
+    isReadable: 1
+  meshes:
+    lODScreenPercentages: []
+    globalScale: 1
+    meshCompression: 0
+    addColliders: 0
+    importBlendShapes: 1
+    swapUVChannels: 0
+    generateSecondaryUV: 0
+    useFileUnits: 1
+    optimizeMeshForGPU: 1
+    keepQuads: 0
+    weldVertices: 1
+    secondaryUVAngleDistortion: 8
+    secondaryUVAreaDistortion: 15.000001
+    secondaryUVHardAngle: 88
+    secondaryUVPackMargin: 4
+    useFileScale: 1
+  tangentSpace:
+    normalSmoothAngle: 60
+    normalImportMode: 0
+    tangentImportMode: 3
+  importAnimation: 1
+  copyAvatar: 0
+  humanDescription:
+    serializedVersion: 2
+    human: []
+    skeleton: []
+    armTwist: 0.5
+    foreArmTwist: 0.5
+    upperLegTwist: 0.5
+    legTwist: 0.5
+    armStretch: 0.05
+    legStretch: 0.05
+    feetSpacing: 0
+    rootMotionBoneName: 
+    rootMotionBoneRotation: {x: 0, y: 0, z: 0, w: 1}
+    hasTranslationDoF: 0
+    hasExtraRoot: 0
+    skeletonHasParents: 1
+  lastHumanDescriptionAvatarSource: {instanceID: 0}
+  animationType: 0
+  humanoidOversampling: 1
+  additionalBone: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

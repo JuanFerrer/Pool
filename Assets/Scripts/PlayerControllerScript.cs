@@ -82,6 +82,9 @@ namespace Pool
             mainCam.transform.SetParent(null);
 
             gameManager.GetComponent<GameManagerScript>().playerHasControl = false;
+
+            audioSource.clip = cueHit;
+            audioSource.Play();
         }
 
         // Draw visual aid on the floor
