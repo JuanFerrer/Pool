@@ -3,7 +3,7 @@ using System.Collections;
 
 namespace Pool
 {
-    public enum BallType { SPOT, STRIPE };
+    public enum BallType { NONE, SPOT, STRIPE, BLACK};
 
 
     public class BallScript : MonoBehaviour
@@ -37,6 +37,7 @@ namespace Pool
         void OnTriggerEnter(Collider other)
         {
              GetComponent<Rigidbody>().constraints = RigidbodyConstraints.None;
+            GameObject.FindGameObjectWithTag("GameController").GetComponent<GameManagerScript>().BallPotted(this.gameObject);
         }
         void OnTriggerExit(Collider other)
         {
