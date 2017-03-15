@@ -1,10 +1,19 @@
 fileFormatVersion: 2
 guid: 54f6ce9bb04350c43aaf01b5506f6a49
-timeCreated: 1486555076
+timeCreated: 1489571740
 licenseType: Free
 MonoImporter:
   serializedVersion: 2
-  defaultReferences: []
+  defaultReferences:
+  - tablePrefab: {fileID: 100076, guid: 43209867ebbd5e14da9a9e4d0c7d5ac3, type: 3}
+  - ballPrefab: {fileID: 149942, guid: 1c535cc06b255b745aa6baec56fc158b, type: 2}
+  - cuePrefab: {fileID: 125610, guid: c4f126bf8e93c6e419f5c675066ad3b1, type: 2}
+  - playerPrefab: {fileID: 154588, guid: 092148aad25632b42850efe50715bb50, type: 2}
+  - camPrefab: {fileID: 150578, guid: 3de58839308c875418604c7a1163f51c, type: 2}
+  - lightPrefab: {fileID: 1374707635465766, guid: 4767ef604e10e7a478a2ba8ee59ba0c7,
+      type: 2}
+  - UIPrefab: {fileID: 1223107611359942, guid: 42d547f0581e6d84e81915c3ad6e75ab, type: 2}
+  - UI: {instanceID: 0}
   executionOrder: 0
   icon: {instanceID: 0}
   userData: 

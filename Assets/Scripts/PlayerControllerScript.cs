@@ -18,6 +18,7 @@ namespace Pool
         // Update is called once per frame
         void FixedUpdate()
         {
+            // Player aiming ball
             if (gameManager.GetComponent<GameManagerScript>().playerHasControl)
             {
                 if (Input.GetKey(KeyCode.D))
@@ -38,6 +39,30 @@ namespace Pool
                 UpdateVisualAid();
             }
 
+            // Player repositioning ball
+            else if (gameManager.GetComponent<GameManagerScript>().playerIsRepositioning)
+            {
+                Vector3 dir = new Vector3();
+
+                if (Input.GetKey(KeyCode.D))
+                    dir.x = 1;
+                else if (Input.GetKey(KeyCode.A))
+                    dir.x = -1;
+                if (Input.GetKey(KeyCode.W))
+                    dir.z = 1;
+                else if (Input.GetKey(KeyCode.S))
+                    dir.z = -1;
+
+                Move(dir);
+
+                // Stay in this position
+                if (Input.GetKeyDown(KeyCode.Space))
+                {
+                    gameManager.GetComponent<GameManagerScript>().playerIsRepositioning = false;
+                    gameManager.GetComponent<GameManagerScript>().playerHasControl = true;
+                }
+            }
+
             // Toggle view
             if (Input.GetKeyDown(KeyCode.Tab))
             {
@@ -46,14 +71,28 @@ namespace Pool
 
         }
 
-        // Rotate right or left
+        /// <summary>
+        /// Rotate right or left
+        /// </summary>
+        /// <param name="rotDir"></param>
         void Rotate(Direction rotDir)
         {
             int dirToRotate = (rotDir == Direction.RIGHT ? 1 : -1);
             transform.Rotate(dirToRotate * Vector3.up * rotSpeed * Time.deltaTime, Space.World);
         }
 
-        // Set player view for next turn
+        /// <summary>
+        /// Move ball to reposition it
+        /// </summary>
+        /// <param name="dir"></param>
+        void Move(Vector3 dir)
+        {
+            transform.Translate(dir * 0.1f, Space.World);
+        }
+
+        /// <summary>
+        /// Set player view for next turn
+        /// </summary>
         public void ResetPlayerView()
         {
             mainCam.transform.position = new Vector3(transform.position.x, transform.position.y + 1.0f, transform.position.z - 3.0f);
@@ -63,7 +102,10 @@ namespace Pool
             //transform.forward = new Vector3(nextBall.transform.position.x - transform.position.x, 0.0f, nextBall.transform.position.z - transform.position.z);
         }
 
-        // Tilt forwards or backwards
+        /// <summary>
+        /// Tilt forwards or backwards
+        /// </summary>
+        /// <param name="tiltDir"></param>
         void Tilt(Direction tiltDir)
         {
             int dirToTilt = (tiltDir == Direction.UP ? 1 : -1);
@@ -73,7 +115,9 @@ namespace Pool
                 transform.Rotate(dirToTilt * Vector3.right * rotSpeed * Time.deltaTime);
         }
 
-        // Apply forward force to ball
+        /// <summary>
+        /// Apply forward force to ball
+        /// </summary>
         void HitBall()
         {
             isMoving = true;
@@ -87,7 +131,9 @@ namespace Pool
             audioSource.Play();
         }
 
-        // Draw visual aid on the floor
+        /// <summary>
+        /// Draw visual aid on the floor
+        /// </summary>
         void UpdateVisualAid()
         {
             //TO DO
