@@ -15,6 +15,8 @@ namespace Pool
         [HideInInspector] public float camMaxY;
         [HideInInspector] public float camMinY;
 
+        private float tableLineZ = -6.0f;
+
         // Update is called once per frame
         void FixedUpdate()
         {
@@ -42,6 +44,7 @@ namespace Pool
             // Player repositioning ball
             else if (gameManager.GetComponent<GameManagerScript>().playerIsRepositioning)
             {
+
                 Vector3 dir = new Vector3();
 
                 if (Input.GetKey(KeyCode.D))
@@ -49,7 +52,15 @@ namespace Pool
                 else if (Input.GetKey(KeyCode.A))
                     dir.x = -1;
                 if (Input.GetKey(KeyCode.W))
-                    dir.z = 1;
+                {
+                    if (gameManager.GetComponent<GameManagerScript>().IsInitialReposition)
+                    {
+                        if (GetComponent<Rigidbody>().transform.position.z < tableLineZ)
+                            dir.z = 1;
+                    }
+                    else
+                        dir.z = 1;
+                }
                 else if (Input.GetKey(KeyCode.S))
                     dir.z = -1;
 
@@ -58,8 +69,7 @@ namespace Pool
                 // Stay in this position
                 if (Input.GetKeyDown(KeyCode.Space))
                 {
-                    gameManager.GetComponent<GameManagerScript>().playerIsRepositioning = false;
-                    gameManager.GetComponent<GameManagerScript>().playerHasControl = true;
+                gameManager.GetComponent<GameManagerScript>().FinishReposition();
                 }
             }
 
@@ -98,6 +108,7 @@ namespace Pool
             mainCam.transform.position = new Vector3(transform.position.x, transform.position.y + 1.0f, transform.position.z - 3.0f);
             mainCam.transform.rotation = Quaternion.Euler(10.0f, 0.0f, 0.0f);
             transform.forward = new Vector3(mainCam.transform.forward.x, 0.0f, mainCam.transform.forward.z);
+            mainCam.transform.SetParent(transform);
             // To be fixed
             //transform.forward = new Vector3(nextBall.transform.position.x - transform.position.x, 0.0f, nextBall.transform.position.z - transform.position.z);
         }

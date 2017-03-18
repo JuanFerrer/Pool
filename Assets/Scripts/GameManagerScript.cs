@@ -11,7 +11,9 @@ using Pool; // Pool namespace
 
 public class GameManagerScript : MonoBehaviour
 {
-    bool isGameReady = false;
+    private bool GameReady { get; set; }
+    public bool IsInitialReposition { get; set; }
+    private bool CueBallPotted { get; set; }
     public enum GameType { ENGLISH_POOL, AMERICAN_POOL, SNOOKER };
 
     [Header("Table")]
@@ -86,7 +88,8 @@ public class GameManagerScript : MonoBehaviour
         SetupVariables(type, arenaIndex, playerAmount);
         SetupScene();
         InstantiateUI();
-        isGameReady = true;
+        GameReady = true;
+        IsInitialReposition = true;
     }
 
     /// <summary>
@@ -95,7 +98,7 @@ public class GameManagerScript : MonoBehaviour
     /// <summary>
     void FixedUpdate()
     {
-        if (isGameReady)
+        if (GameReady)
         {
             if (!playerHasControl && !AnyBallMoving() && !playerIsRepositioning)
             {
@@ -130,6 +133,8 @@ public class GameManagerScript : MonoBehaviour
     /// <param name="playerAmount"></param>
     private void SetupVariables(GameType type, int arenaIndex, int playerAmount)
     {
+        GameReady = false;
+        CueBallPotted = false;
         shouldChangePlayer = false;
         shouldRepositionCueBall = true;
 
@@ -271,6 +276,7 @@ public class GameManagerScript : MonoBehaviour
         playerIsRepositioning = true;
         // Player model
         player = (GameObject)Instantiate(playerPrefab, playerPos, Quaternion.identity);
+        player.GetComponent<PlayerControllerScript>().BallType = BallType.CUE;
         balls[0] = player;
 
         mainCam = (GameObject)Instantiate(camPrefab, new Vector3(0.0f, player.transform.position.y + 1.0f, player.transform.position.z - 3.0f), Quaternion.Euler(10.0f, 0.0f, 0.0f));
@@ -334,6 +340,13 @@ public class GameManagerScript : MonoBehaviour
     /// </summary>
     private void GiveControlToPlayer()
     {
+        player.GetComponent<PlayerControllerScript>().ResetPlayerView();
+        if (CueBallPotted)
+        {
+            shouldRepositionCueBall = true;
+            player.GetComponent<Rigidbody>().transform.position = playerPos;
+            CueBallPotted = false;
+        }
         if (shouldRepositionCueBall)
         {
             playerIsRepositioning = true;
@@ -343,16 +356,27 @@ public class GameManagerScript : MonoBehaviour
         {
             playerHasControl = true;
             shouldChangePlayer = true;  // At the end of each turn, players will change unless the current players pots one of his balls
-            player.GetComponent<PlayerControllerScript>().ResetPlayerView();
+            //player.GetComponent<PlayerControllerScript>().ResetPlayerView();
 
-            mainCam.transform.SetParent(player.transform);
+            //mainCam.transform.SetParent(player.transform);
 
             // Remove player constraints
             player.GetComponent<Rigidbody>().constraints = RigidbodyConstraints.FreezePositionY;
 
             // Update UI here
-            //UI.GetComponent<UIScript>().UpdateUI();
+            UI.GetComponent<UIScript>().UpdateUI();
         }
+    }
+
+    /// <summary>
+    /// Stay in selected position and stop repositioning
+    /// </summary>
+    public void FinishReposition()
+    {
+        shouldRepositionCueBall = false;
+        IsInitialReposition = false;
+        playerIsRepositioning = false;
+        playerHasControl = true;
     }
 
     /// <summary>
@@ -434,20 +458,20 @@ public class GameManagerScript : MonoBehaviour
                 shouldChangePlayer = false;
             }
 
-            // Potting cue ball
-            if (ball.GetComponent<BallScript>().BallType == BallType.CUE)
-            {
-                // TODO
-                shouldRepositionCueBall = true;
-                shouldChangePlayer = true;
-                break;
-            }
-
             // Potting black ball
             if (ball.GetComponent<BallScript>().BallType == BallType.BLACK)
             {
                 // TODO
                 // flag shouldEndGame = true;
+                return;
+            }
+
+            // Potting cue ball
+            if (ball.GetComponent<BallScript>().BallType == BallType.CUE)
+            {
+                // TODO
+                shouldChangePlayer = true;
+                CueBallPotted = true;
             }
         }
 
@@ -463,6 +487,7 @@ public class GameManagerScript : MonoBehaviour
     private void RemoveBalls()
     {
         foreach (GameObject ball in pottedBalls)
+            if (ball.GetComponent<BallScript>().BallType != BallType.CUE)
             Destroy(ball);
     }
 
