@@ -140,7 +140,10 @@ namespace Pool
 
             audioSource.clip = cueHit;
             audioSource.Play();
+
+            mainCam.GetComponent<CameraScript>().BallToViewpoint();
         }
+
 
         /// <summary>
         /// Draw visual aid on the floor

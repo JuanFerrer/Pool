@@ -26,10 +26,21 @@ namespace Pool
         /// 
         /// </summary>
         /// <param name="power"></param>
-        public void UpdatePowerBar(float power)
+        public void SetCuePower(float power)
         {
 
         }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="ballNo"></param>
+        public void SetPottedBall(int ballNo)
+        {
+
+        }
+
+
 
         /// <summary>
         /// Just for initialisation. GameManager will call this on construction

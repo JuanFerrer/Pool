@@ -4,6 +4,13 @@
 //  
 
 
+// TO FIX
+/* Lock cue ball until stop moving (no timer)
+ * Freeze position and rotation while on reposition
+ * Merge
+ * 
+ */
+
 using UnityEngine;
 using System.Collections.Generic;
 
@@ -113,7 +120,8 @@ public class GameManagerScript : MonoBehaviour
                     ChangePlayer();
                 }
 
-                GiveControlToPlayer();
+                if (mainCam.GetComponent<CameraScript>().IsReady)
+                    GiveControlToPlayer();
             }
 
             if (IsWinCondition())
@@ -182,6 +190,10 @@ public class GameManagerScript : MonoBehaviour
     {
         // Has been setup in SetupPlayer (appended as a child of player)
         mainCamera = mainCam.GetComponent<Camera>();
+        mainCam.AddComponent<CameraScript>();
+        mainCam.GetComponent<CameraScript>().IsReady = false;
+        mainCam.GetComponent<CameraScript>().player = player;
+        mainCam.GetComponent<CameraScript>().waitingTime = 10.0f;
 
         secCam = (GameObject)Instantiate(camPrefab, secCamPos, Quaternion.Euler(secCamRot));
         secCam.tag = "SecondCam";
@@ -276,7 +288,6 @@ public class GameManagerScript : MonoBehaviour
         playerIsRepositioning = true;
         // Player model
         player = (GameObject)Instantiate(playerPrefab, playerPos, Quaternion.identity);
-        player.GetComponent<PlayerControllerScript>().BallType = BallType.CUE;
         balls[0] = player;
 
         mainCam = (GameObject)Instantiate(camPrefab, new Vector3(0.0f, player.transform.position.y + 1.0f, player.transform.position.z - 3.0f), Quaternion.Euler(10.0f, 0.0f, 0.0f));
@@ -287,6 +298,7 @@ public class GameManagerScript : MonoBehaviour
         cue.transform.SetParent(mainCam.transform);
 
         // Set player variables
+        player.GetComponent<PlayerControllerScript>().BallType = BallType.CUE;
         player.GetComponent<PlayerControllerScript>().rotSpeed = rotationSpeed;
         player.GetComponent<PlayerControllerScript>().mainCam = mainCam;
         player.GetComponent<PlayerControllerScript>().forceApplied = forceApplied;
@@ -340,7 +352,6 @@ public class GameManagerScript : MonoBehaviour
     /// </summary>
     private void GiveControlToPlayer()
     {
-        player.GetComponent<PlayerControllerScript>().ResetPlayerView();
         if (CueBallPotted)
         {
             shouldRepositionCueBall = true;
@@ -366,6 +377,7 @@ public class GameManagerScript : MonoBehaviour
             // Update UI here
             UI.GetComponent<UIScript>().UpdateUI();
         }
+        player.GetComponent<PlayerControllerScript>().ResetPlayerView();
     }
 
     /// <summary>
