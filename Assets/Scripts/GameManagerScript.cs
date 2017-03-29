@@ -4,13 +4,6 @@
 //  
 
 
-// TO FIX
-/* Lock cue ball until stop moving (no timer)
- * Freeze position and rotation while on reposition
- * Merge
- * 
- */
-
 using UnityEngine;
 using System.Collections.Generic;
 
@@ -53,8 +46,9 @@ public class GameManagerScript : MonoBehaviour
     static private int PLAYER_NO;                       // Amount of players
     [HideInInspector] public int currentPlayer;         // Reference to current players
     [HideInInspector] Player[] players;                 // References to all players
-    private bool shouldChangePlayer { get; set; }       // Player needs to change on next turn
-    private bool shouldRepositionCueBall { get; set; }  // Cue ball was potted flag
+    private bool IsChangePlayer { get; set; }       // Player needs to change on next turn
+    private bool ShouldRepositionCueBall { get; set; }  // Cue ball was potted flag
+    private bool IsControlToPlayer { get; set; }        // Player should regain control
 
     [Header("Cameras")]
     public GameObject camPrefab;                        // Prefab of cam
@@ -107,12 +101,15 @@ public class GameManagerScript : MonoBehaviour
     {
         if (GameReady)
         {
-            if (!playerHasControl && !AnyBallMoving() && !playerIsRepositioning)
+            if (mainCam.GetComponent<CameraScript>().IsReady && IsControlToPlayer)
+                GiveControlToPlayer();
+            else if (!playerHasControl && !AnyBallMoving() && !playerIsRepositioning && mainCam.GetComponent<CameraScript>().IsReady)
             {
-                // Balls has stopped. Let's check what happened and act accordingly
+
+                // Balls have stopped. Let's check what happened and act accordingly
                 CheckPottedBalls();
 
-                UI.GetComponent<UIScript>().UpdateUI();
+                //UI.GetComponent<UIScript>().UpdateUI();
 
                 // Decide if the player needs to change
                 if (ShouldChangePlayer())
@@ -120,8 +117,10 @@ public class GameManagerScript : MonoBehaviour
                     ChangePlayer();
                 }
 
-                if (mainCam.GetComponent<CameraScript>().IsReady)
-                    GiveControlToPlayer();
+                // Then start moving to ball
+                //mainCam.GetComponent<CameraScript>().IsReady = false;
+                mainCam.GetComponent<CameraScript>().CamToBall();
+                IsControlToPlayer = true;
             }
 
             if (IsWinCondition())
@@ -143,8 +142,9 @@ public class GameManagerScript : MonoBehaviour
     {
         GameReady = false;
         CueBallPotted = false;
-        shouldChangePlayer = false;
-        shouldRepositionCueBall = true;
+        IsChangePlayer = false;
+        ShouldRepositionCueBall = true;
+        IsControlToPlayer = false;
 
         pottedBalls = new List<GameObject>();
 
@@ -152,6 +152,7 @@ public class GameManagerScript : MonoBehaviour
         players = new Player[PLAYER_NO];
 
         UI = (GameObject)Instantiate(UIPrefab);
+
     }
 
     /// <summary>
@@ -193,7 +194,6 @@ public class GameManagerScript : MonoBehaviour
         mainCam.AddComponent<CameraScript>();
         mainCam.GetComponent<CameraScript>().IsReady = false;
         mainCam.GetComponent<CameraScript>().player = player;
-        mainCam.GetComponent<CameraScript>().waitingTime = 10.0f;
 
         secCam = (GameObject)Instantiate(camPrefab, secCamPos, Quaternion.Euler(secCamRot));
         secCam.tag = "SecondCam";
@@ -267,6 +267,7 @@ public class GameManagerScript : MonoBehaviour
         //    Instantiate(ballPrefab, new Vector3(ballPos.x + 0.0f, ballPos.y, ballPos.z + 4.0f), Quaternion.identity);
         //    Instantiate(ballPrefab, new Vector3(ballPos.x + 1.0f, ballPos.y, ballPos.z + 4.0f), Quaternion.identity);
         //    Instantiate(ballPrefab, new Vector3(ballPos.x + 2.0f, ballPos.y, ballPos.z + 4.0f), Quaternion.identity);
+        FreezeBalls();
     }
 
     /// <summary>
@@ -352,21 +353,23 @@ public class GameManagerScript : MonoBehaviour
     /// </summary>
     private void GiveControlToPlayer()
     {
+        IsControlToPlayer = false;
         if (CueBallPotted)
         {
-            shouldRepositionCueBall = true;
+            ShouldRepositionCueBall = true;
             player.GetComponent<Rigidbody>().transform.position = playerPos;
             CueBallPotted = false;
         }
-        if (shouldRepositionCueBall)
+        if (ShouldRepositionCueBall)
         {
             playerIsRepositioning = true;
-            shouldRepositionCueBall = false;
+            ShouldRepositionCueBall = false;
+            FreezeBalls();
         }
         else
         {
             playerHasControl = true;
-            shouldChangePlayer = true;  // At the end of each turn, players will change unless the current players pots one of his balls
+            IsChangePlayer = true;  // At the end of each turn, players will change unless the current players pots one of his balls
             //player.GetComponent<PlayerControllerScript>().ResetPlayerView();
 
             //mainCam.transform.SetParent(player.transform);
@@ -385,10 +388,11 @@ public class GameManagerScript : MonoBehaviour
     /// </summary>
     public void FinishReposition()
     {
-        shouldRepositionCueBall = false;
+        ShouldRepositionCueBall = false;
         IsInitialReposition = false;
         playerIsRepositioning = false;
         playerHasControl = true;
+        UnfreezeBalls();
     }
 
     /// <summary>
@@ -398,7 +402,7 @@ public class GameManagerScript : MonoBehaviour
     /// <returns></returns>
     private bool ShouldChangePlayer()
     {
-        return shouldChangePlayer;
+        return IsChangePlayer;
     }
 
     /// <summary>
@@ -411,7 +415,7 @@ public class GameManagerScript : MonoBehaviour
         Debug.Log("Turn of player " + currentPlayer);
 
         SelectNextBallForPlayer();
-        shouldChangePlayer = false;
+        IsChangePlayer = false;
     }
 
     /// <summary>
@@ -438,6 +442,34 @@ public class GameManagerScript : MonoBehaviour
             secCamera.enabled = false;
         }
     }
+
+    /// <summary>
+    /// Freeze rotation of cue ball position and rotation of all other balls
+    /// </summary>
+    public void FreezeBalls()
+    {
+        foreach (GameObject ball in balls)
+        {
+            if (ball != null)
+            {
+                if (ball.GetComponent<BallScript>().BallType == BallType.CUE)
+                    ball.GetComponent<Rigidbody>().constraints = RigidbodyConstraints.FreezeRotation;
+                else ball.GetComponent<Rigidbody>().constraints = RigidbodyConstraints.FreezeAll;
+            }
+        }
+    }
+
+    /// <summary>
+    /// Unfreeze rotation and position of balls
+    /// </summary>
+    public void UnfreezeBalls()
+    {
+        foreach (GameObject ball in balls)
+        {
+            if (ball != null)
+                ball.GetComponent<Rigidbody>().constraints = RigidbodyConstraints.FreezePositionY;
+        }
+    }
     #endregion
 
     #region LOGIC
@@ -461,13 +493,13 @@ public class GameManagerScript : MonoBehaviour
             // Player does not have a ball type. We assign then this type
             if (players[currentPlayer].GetPlayerType() == BallType.NONE)
             {
-                shouldChangePlayer = false;
+                IsChangePlayer = false;
                 SetPlayersType(ball);
                 Debug.Log("Player " + currentPlayer + " plays with " + GetCurrentPlayer().GetPlayerType());
             }
             else if (players[currentPlayer].GetPlayerType() == ball.GetComponent<BallScript>().BallType)
             {
-                shouldChangePlayer = false;
+                IsChangePlayer = false;
             }
 
             // Potting black ball
@@ -482,7 +514,7 @@ public class GameManagerScript : MonoBehaviour
             if (ball.GetComponent<BallScript>().BallType == BallType.CUE)
             {
                 // TODO
-                shouldChangePlayer = true;
+                IsChangePlayer = true;
                 CueBallPotted = true;
             }
         }

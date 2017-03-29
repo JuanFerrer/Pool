@@ -44,7 +44,6 @@ namespace Pool
             // Player repositioning ball
             else if (gameManager.GetComponent<GameManagerScript>().playerIsRepositioning)
             {
-
                 Vector3 dir = new Vector3();
 
                 if (Input.GetKey(KeyCode.D))
@@ -70,6 +69,7 @@ namespace Pool
                 if (Input.GetKeyDown(KeyCode.Space))
                 {
                 gameManager.GetComponent<GameManagerScript>().FinishReposition();
+                    gameManager.GetComponent<GameManagerScript>().UnfreezeBalls();
                 }
             }
 

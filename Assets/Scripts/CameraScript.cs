@@ -6,36 +6,21 @@ namespace Pool
 {
     public class CameraScript : MonoBehaviour
     {
-        [HideInInspector]
-        public bool IsReady { get; set; }
+        [HideInInspector] public bool IsReady { get; set; }
 
+        //Position and rotation of possible viewpoints
         Vector3[] viewPositions = { new Vector3(15, 10, 0), new Vector3(-15, 10, 0), new Vector3(8, 8, -20), new Vector3(-8, 8, -20), new Vector3(-8, 8, 20), new Vector3(8, 8, 20), };
         Vector3[] viewRotation = { new Vector3(40, -90, 0), new Vector3(40, 90, 0), new Vector3(30, -30, 0), new Vector3(30, 30, 0), new Vector3(30, 150, 0), new Vector3(30, 210, 0) };
 
         [HideInInspector]
-        public GameObject player; // Ref to player
+        public GameObject player; // Reference to player
 
-        private float countdown;
-        public float waitingTime = 5.0f;
-
-        void FixedUpdate()
-        {
-            if (!IsReady)
-            {
-                if (countdown < waitingTime)
-                    countdown += Time.deltaTime;
-                else if (countdown > waitingTime)
-                {
-                    countdown = 10.0f;
-                    CamToBall();
-                }
-            }
-        }
-
+        /// <summary>
+        /// Starts corouting for moving camera to closest viewpoint
+        /// </summary>
         public void BallToViewpoint()
         {
             IsReady = false;
-            countdown = 0;
             StartCoroutine(ToViewpoint(2.5f));
         }
 
@@ -44,12 +29,20 @@ namespace Pool
         /// </summary>
         public void CamToBall()
         {
-            IsReady = false;
-            Vector3 newCamPos = new Vector3(player.transform.position.x, player.transform.position.y + 1.0f, player.transform.position.z - 3.0f);
-            Quaternion newCamRot = Quaternion.Euler(10.0f, 0.0f, 0.0f);
-            StartCoroutine(ToBall(newCamPos, newCamRot));
+            if (IsReady)
+            {
+                IsReady = false;
+                Vector3 newCamPos = new Vector3(player.transform.position.x, player.transform.position.y + 1.0f, player.transform.position.z - 3.0f);
+                Quaternion newCamRot = Quaternion.Euler(10.0f, 0.0f, 0.0f);
+                StartCoroutine(ToBall(newCamPos, newCamRot));
+            }
         }
 
+        /// <summary>
+        /// Coroutine for moving camera to closest viewpoint
+        /// </summary>
+        /// <param name="transitionDuration"></param>
+        /// <returns></returns>
         public IEnumerator ToViewpoint(float transitionDuration = 2.0f)
         {
             int targetPos = GetClosestViewPoint();
@@ -59,14 +52,23 @@ namespace Pool
 
             while (t < 1.0f)
             {
+                // Lerp range is 0 - 1, so we need to have t in that range
                 t += Time.deltaTime * (Time.timeScale / transitionDuration);
 
                 transform.position = Vector3.Lerp(startingPos, viewPositions[targetPos], t);
                 transform.rotation = Quaternion.Lerp(startingRot, Quaternion.Euler(viewRotation[targetPos]), t);
-                yield return 0;
+                yield return null;
             }
+            IsReady = true;
         }
 
+        /// <summary>
+        /// Coroutine for moving camera to ball
+        /// </summary>
+        /// <param name="targetPos"></param>
+        /// <param name="targetRot"></param>
+        /// <param name="transitionDuration"></param>
+        /// <returns></returns>
         public IEnumerator ToBall(Vector3 targetPos, Quaternion targetRot, float transitionDuration = 2.0f)
         {
             float t = 0.0f;
@@ -75,16 +77,20 @@ namespace Pool
 
             while (t < 1.0f)
             {
-                IsReady = false;
+                // Lerp range is 0 - 1, so we need to have t in that range
                 t += Time.deltaTime * (Time.timeScale / transitionDuration);
 
                 transform.position = Vector3.Lerp(startingPos, targetPos, t);
                 transform.rotation = Quaternion.Lerp(startingRot, targetRot, t);
-                IsReady = true;
-                yield return 0;
+                yield return null;
             }
+            IsReady = true;
         }
 
+        /// <summary>
+        ///  Find viewpoint closest to camera
+        /// </summary>
+        /// <returns></returns>
         private int GetClosestViewPoint()
         {
             int closestViewPoint = -1;
