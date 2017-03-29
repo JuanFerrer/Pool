@@ -3,7 +3,7 @@ using System.Collections;
 
 namespace Pool
 {
-    public enum BallType { NONE, SPOT, STRIPE, BLACK};
+    public enum BallType { NONE, SPOT, STRIPE, BLACK, CUE};
 
 
     public class BallScript : MonoBehaviour
@@ -18,9 +18,11 @@ namespace Pool
         public AudioClip ballHit;
         public AudioClip cushionHit;
         public AudioClip pocketDrop;
-        [HideInInspector] public AudioSource audioSource; 
+        [HideInInspector] public AudioSource audioSource;
 
-        // Use this for initialization
+        /// <summary>
+        /// Use this for initialization
+        /// </summary>
         void Awake()
         {
             isMoving = false;
@@ -34,11 +36,20 @@ namespace Pool
             }
         }
 
+        /// <summary>
+        /// Unity function. Enter a trigger
+        /// </summary>
+        /// <param name="other"></param>
         void OnTriggerEnter(Collider other)
         {
              GetComponent<Rigidbody>().constraints = RigidbodyConstraints.None;
             GameObject.FindGameObjectWithTag("GameController").GetComponent<GameManagerScript>().BallPotted(this.gameObject);
         }
+
+        /// <summary>
+        /// Unity function. Exit a trigger
+        /// </summary>
+        /// <param name="other"></param>
         void OnTriggerExit(Collider other)
         {
             audioSource.clip = pocketDrop;
@@ -46,6 +57,10 @@ namespace Pool
             audioSource.Play();
         }
 
+        /// <summary>
+        /// Unity function. Collide with another object
+        /// </summary>
+        /// <param name="other"></param>
         void OnCollisionEnter(Collision other)
         {
             if (other.gameObject.tag == "Ball" || other.gameObject.tag == "Player")

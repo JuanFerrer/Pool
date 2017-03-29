@@ -11,8 +11,9 @@ using Pool; // Pool namespace
 
 public class GameManagerScript : MonoBehaviour
 {
-    bool isGameReady = false;
-
+    private bool GameReady { get; set; }
+    public bool IsInitialReposition { get; set; }
+    private bool CueBallPotted { get; set; }
     public enum GameType { ENGLISH_POOL, AMERICAN_POOL, SNOOKER };
 
     [Header("Table")]
@@ -26,24 +27,27 @@ public class GameManagerScript : MonoBehaviour
     public Vector3 ballPos;                                     // Initial position of balls
     private const int BALLS_NO = 16;                            // Amount of balls
     private GameObject[] balls = new GameObject[BALLS_NO];      // Array of all balls (ball 0 is cue ball)
-    public Material[] ballMaterial;                             // Material of all balls 
+    public Material[] ballMaterial;                             // Material of all balls
+    private List<GameObject> pottedBalls;                       // List of every potted ball in a given turn. pottedBalls is reset at the beginning of each turn
 
     [Header("Cue")]
     public GameObject cuePrefab;                        // Prefab of cue
     private GameObject cue;                             // Reference to cue
 
     [Header("Player")]
-    public GameObject playerPrefab;                     // Prefab of player
-    public Vector3 playerPos;                           // Initial position of player
-    private GameObject player;                          // Reference to current player game object
-    public float rotationSpeed;                         // Rotation speed 
-    [Range(0, 2000)]public float forceApplied;        // Force applied to ball on hit
-    [HideInInspector] public bool playerHasControl;     // Flag player is in control
+    public GameObject playerPrefab;                         // Prefab of player
+    public Vector3 playerPos;                               // Initial position of player
+    private GameObject player;                              // Reference to current player game object
+    public float rotationSpeed;                             // Rotation speed 
+    [Range(0, 2000)]public float forceApplied;              // Force applied to ball on hit
+    [HideInInspector] public bool playerHasControl;         // Flag player is in control
+    [HideInInspector] public bool playerIsRepositioning;    // Flag player is repositioning
 
     static private int PLAYER_NO;                       // Amount of players
     [HideInInspector] public int currentPlayer;         // Reference to current players
     [HideInInspector] Player[] players;                 // References to all players
     private bool shouldChangePlayer { get; set; }       // Player needs to change on next turn
+    private bool shouldRepositionCueBall { get; set; }  // Cue ball was potted flag
 
     [Header("Cameras")]
     public GameObject camPrefab;                        // Prefab of cam
@@ -61,7 +65,7 @@ public class GameManagerScript : MonoBehaviour
     [Header("Lights")]
     public GameObject lightPrefab;                      // Prefab of light
     public Vector3 lightPos;                            // Initial position of light
-    private const int LIGHTS_NO = 4;                    // Amount of lights in scene
+    public Vector3 lightRot;                            // Initial rotation of light
 
     [Header("UI")]
     public GameObject UIPrefab;                         // Prefab of UI object
@@ -73,23 +77,37 @@ public class GameManagerScript : MonoBehaviour
         StartGame(GameType.ENGLISH_POOL, 0, 2);
     }
 
-    // Use this for initialization
+    /// <summary>
+    /// Use this for initialization
+    /// </summary>
+    /// <param name="type"></param>
+    /// <param name="arenaIndex"></param>
+    /// <param name="playerAmount"></param>
     public void StartGame(GameType type, int arenaIndex, int playerAmount)
     {
         SetupVariables(type, arenaIndex, playerAmount);
         SetupScene();
         InstantiateUI();
-        isGameReady = true;
+        GameReady = true;
+        IsInitialReposition = true;
     }
 
-    // Update is called once per frame
-    // Game loop, if you will
+    /// <summary>
+    /// Update is called once per frame
+    /// Game loop, if you will
+    /// <summary>
     void FixedUpdate()
     {
-        if (isGameReady)
+        if (GameReady)
         {
-            if (!playerHasControl && !AnyBallMoving())
+            if (!playerHasControl && !AnyBallMoving() && !playerIsRepositioning)
             {
+                // Balls has stopped. Let's check what happened and act accordingly
+                CheckPottedBalls();
+
+                UI.GetComponent<UIScript>().UpdateUI();
+
+                // Decide if the player needs to change
                 if (ShouldChangePlayer())
                 {
                     ChangePlayer();
@@ -105,14 +123,22 @@ public class GameManagerScript : MonoBehaviour
         }
     }
 
-    /*******************/
-    /*      SETUP      */
-    /*******************/
+    #region SETUP
 
-    // Get variables ready for instantiation
+    /// <summary>
+    /// Get variables ready for instantiation
+    /// </summary>
+    /// <param name="type"></param>
+    /// <param name="arenaIndex"></param>
+    /// <param name="playerAmount"></param>
     private void SetupVariables(GameType type, int arenaIndex, int playerAmount)
     {
-        shouldChangePlayer = true;
+        GameReady = false;
+        CueBallPotted = false;
+        shouldChangePlayer = false;
+        shouldRepositionCueBall = true;
+
+        pottedBalls = new List<GameObject>();
 
         PLAYER_NO = playerAmount;
         players = new Player[PLAYER_NO];
@@ -120,7 +146,9 @@ public class GameManagerScript : MonoBehaviour
         UI = (GameObject)Instantiate(UIPrefab);
     }
 
-    // Setup scene game objects and variables
+    /// <summary>
+    /// Setup scene game objects and variables
+    /// </summary>
     private void SetupScene()
     {
         // Create table
@@ -132,30 +160,24 @@ public class GameManagerScript : MonoBehaviour
         // Create balls
         SetRack();
 
-        // Get cameras and referecens
+        // Get cameras and references
         SetupCameras();
 
         // Get and instantiate lights
-        //SetupLights();
+        SetupLights();
     }
 
-    // Instantiate all lights and position them
+    /// <summary>
+    /// Instantiate all lights and position them
+    /// </summary>
     private void SetupLights()
     {
-        //float[] xOffset = {5, 5, -5, -5 };
-        //float[] zOffset = {5, -5, 5, -5 };
-        //GameObject[] lights = new GameObject[LIGHTS_NO];
-
-
-        //for (int i = 0; i < lights.Length; ++i)
-        //{
-        //    lights[i] = (GameObject)Instantiate(lightPrefab, new Vector3(xOffset[i], 5.0f, zOffset[i]), Quaternion.identity);
-        //}
-
-        //Instantiate(lightPrefab, lightPos, Quaternion.identity);
+       Instantiate(lightPrefab, lightPos, Quaternion.Euler(lightRot));
     }
 
-    // Setup all cameras and references
+    /// <summary>
+    /// Setup all cameras and references
+    /// </summary>
     private void SetupCameras()
     {
         // Has been setup in SetupPlayer (appended as a child of player)
@@ -173,7 +195,9 @@ public class GameManagerScript : MonoBehaviour
         secCamera.enabled = false;
     }
 
-    // Put all balls in position as in a rack
+    /// <summary>
+    /// Put all balls in position as in a rack
+    /// </summary>
     private void SetRack()
     {
         float[] xOffset = { 0.0f,
@@ -203,6 +227,8 @@ public class GameManagerScript : MonoBehaviour
             else if (i == 8)    newBall.GetComponent<BallScript>().BallType = BallType.BLACK;
             else                newBall.GetComponent<BallScript>().BallType = BallType.STRIPE;
 
+            newBall.GetComponent<BallScript>().BallNo = i;
+
             newBall.tag = "Ball";
 
             balls[i] = newBall;  // Uninitialised?
@@ -231,7 +257,9 @@ public class GameManagerScript : MonoBehaviour
         //    Instantiate(ballPrefab, new Vector3(ballPos.x + 2.0f, ballPos.y, ballPos.z + 4.0f), Quaternion.identity);
     }
 
-    // Create player with camera
+    /// <summary>
+    /// Create player with camera
+    /// </summary>
     private void SetupPlayer()
     {
         currentPlayer = 0;
@@ -243,9 +271,12 @@ public class GameManagerScript : MonoBehaviour
             players[i].SetPlayerType(BallType.NONE);
         }
 
-        playerHasControl = true;
+        // __CHANGED
+        playerHasControl = false;
+        playerIsRepositioning = true;
         // Player model
         player = (GameObject)Instantiate(playerPrefab, playerPos, Quaternion.identity);
+        player.GetComponent<PlayerControllerScript>().BallType = BallType.CUE;
         balls[0] = player;
 
         mainCam = (GameObject)Instantiate(camPrefab, new Vector3(0.0f, player.transform.position.y + 1.0f, player.transform.position.z - 3.0f), Quaternion.Euler(10.0f, 0.0f, 0.0f));
@@ -265,15 +296,17 @@ public class GameManagerScript : MonoBehaviour
         player.GetComponent<PlayerControllerScript>().audioSource = player.GetComponent<AudioSource>();
     }
 
-    // Instantiate UI object
+    /// <summary>
+    /// Instantiate UI object
+    /// </summary>
     private void InstantiateUI()
     {
 
     }
 
-    /*******************/
-    /*     PLAYER      */
-    /*******************/
+    #endregion
+
+    #region PLAYER
 
     // Returns the current player script
     public Player GetCurrentPlayer()
@@ -281,42 +314,84 @@ public class GameManagerScript : MonoBehaviour
         return players[currentPlayer];
     }
 
-    // Ask every ball to see if they're still moving
+    /// <summary>
+    /// Ask every ball to see if they're still moving
+    /// </summary>
+    /// <returns></returns>
     private bool AnyBallMoving()
     {
         for (int i = 0; i < BALLS_NO; ++i)
         {
-            if (balls[i].GetComponent<BallScript>().isMoving)
-                if (Mathf.Approximately(balls[i].GetComponent<Rigidbody>().velocity.magnitude, 0.0f))   // Stopped moving
-                {
-                    balls[i].GetComponent<BallScript>().isMoving = false;
-                }
-                else return true;
+            if (balls[i] != null)
+            {
+                if (balls[i].GetComponent<BallScript>().isMoving)
+                    if (Mathf.Approximately(balls[i].GetComponent<Rigidbody>().velocity.magnitude, 0.0f))   // Stopped moving
+                    {
+                        balls[i].GetComponent<BallScript>().isMoving = false;
+                    }
+                    else return true;
+            }
         }
         return false;
     }
 
-    // Return control to current player
+    /// <summary>
+    /// Return control to current player
+    /// </summary>
     private void GiveControlToPlayer()
     {
-        playerHasControl = true;
-        shouldChangePlayer = true;  // At the end of each turn, players will change unless the current players pots one of his balls
         player.GetComponent<PlayerControllerScript>().ResetPlayerView();
+        if (CueBallPotted)
+        {
+            shouldRepositionCueBall = true;
+            player.GetComponent<Rigidbody>().transform.position = playerPos;
+            CueBallPotted = false;
+        }
+        if (shouldRepositionCueBall)
+        {
+            playerIsRepositioning = true;
+            shouldRepositionCueBall = false;
+        }
+        else
+        {
+            playerHasControl = true;
+            shouldChangePlayer = true;  // At the end of each turn, players will change unless the current players pots one of his balls
+            //player.GetComponent<PlayerControllerScript>().ResetPlayerView();
 
-        mainCam.transform.SetParent(player.transform);       
+            //mainCam.transform.SetParent(player.transform);
 
-        // Update UI here
-        //UI.GetComponent<UIScript>().UpdateUI();
+            // Remove player constraints
+            player.GetComponent<Rigidbody>().constraints = RigidbodyConstraints.FreezePositionY;
+
+            // Update UI here
+            UI.GetComponent<UIScript>().UpdateUI();
+        }
     }
 
-    // Check rules and see if changing the player is needed
-    // Heuristics/game rules
+    /// <summary>
+    /// Stay in selected position and stop repositioning
+    /// </summary>
+    public void FinishReposition()
+    {
+        shouldRepositionCueBall = false;
+        IsInitialReposition = false;
+        playerIsRepositioning = false;
+        playerHasControl = true;
+    }
+
+    /// <summary>
+    /// Check rules and see if changing the player is needed
+    /// Heuristics/game rules
+    /// </summary>
+    /// <returns></returns>
     private bool ShouldChangePlayer()
     {
         return shouldChangePlayer;
     }
 
-    // Change player, select next ball, update text, etc.
+    /// <summary>
+    /// Change player, select next ball, update text, etc.
+    /// </summary>
     private void ChangePlayer()
     {
         // TODO
@@ -327,13 +402,17 @@ public class GameManagerScript : MonoBehaviour
         shouldChangePlayer = false;
     }
 
-    // Make nextBall be the appropriate for the player
+    /// <summary>
+    /// Make nextBall be the appropriate for the player
+    /// </summary>
     private void SelectNextBallForPlayer()
     {
         // TODO
     }
 
-    // Change rendering camera
+    /// <summary>
+    /// Change rendering camera
+    /// </summary>
     public void ToggleCamera()
     {
         if (mainCamera.enabled == true)
@@ -347,55 +426,121 @@ public class GameManagerScript : MonoBehaviour
             secCamera.enabled = false;
         }
     }
+    #endregion
 
-    /******************/
-    /*     LOGIC      */
-    /******************/
+    #region LOGIC
 
-    // Reaction to potting a ball
+    /// <summary>
+    /// Reaction to potting a ball
+    /// </summary>
+    /// <param name="ball"></param>
     public void BallPotted(GameObject ball)
     {
-        // Player does not have a ball type. We assign then this type
-        if (players[currentPlayer].GetPlayerType() == BallType.NONE)
-        {
-            shouldChangePlayer = false;
-            SetPlayersType(ball);
-            Debug.Log("Player " + currentPlayer + " plays with " + GetCurrentPlayer().GetPlayerType());
-        }
-        else if (players[currentPlayer].GetPlayerType() == ball.GetComponent<BallScript>().BallType)
-        {
-            shouldChangePlayer = false;
-        }
+        pottedBalls.Add(ball);
     }
 
-    // One of the players potted the first ball. Assign them their ball type
+    /// <summary>
+    /// Check balls potted since last turn
+    /// </summary>
+    public void CheckPottedBalls()
+    {
+        foreach (GameObject ball in pottedBalls)
+        {
+            // Player does not have a ball type. We assign then this type
+            if (players[currentPlayer].GetPlayerType() == BallType.NONE)
+            {
+                shouldChangePlayer = false;
+                SetPlayersType(ball);
+                Debug.Log("Player " + currentPlayer + " plays with " + GetCurrentPlayer().GetPlayerType());
+            }
+            else if (players[currentPlayer].GetPlayerType() == ball.GetComponent<BallScript>().BallType)
+            {
+                shouldChangePlayer = false;
+            }
+
+            // Potting black ball
+            if (ball.GetComponent<BallScript>().BallType == BallType.BLACK)
+            {
+                // TODO
+                // flag shouldEndGame = true;
+                return;
+            }
+
+            // Potting cue ball
+            if (ball.GetComponent<BallScript>().BallType == BallType.CUE)
+            {
+                // TODO
+                shouldChangePlayer = true;
+                CueBallPotted = true;
+            }
+        }
+
+        // Remove each ball
+        RemoveBalls();
+
+        ResetBallList();
+    }
+
+    /// <summary>
+    /// Remove potted balls from the table
+    /// </summary>
+    private void RemoveBalls()
+    {
+        foreach (GameObject ball in pottedBalls)
+            if (ball.GetComponent<BallScript>().BallType != BallType.CUE)
+            Destroy(ball);
+    }
+
+    /// <summary>
+    /// Set pottedBalls list to empty
+    /// </summary>
+    private void ResetBallList()
+    {
+        // We're gonna use this again, so there's no point in creating a new object. It would be slower
+        // to allocate new memory and dump it every turn.
+        // http://stackoverflow.com/questions/10901020/which-is-faster-clear-collection-or-instantiate-new
+        pottedBalls.Clear();
+    }
+
+    /// <summary>
+    /// One of the players potted the first ball. Assign them their ball type
+    /// </summary>
+    /// <param name="ball"></param>
     private void SetPlayersType(GameObject ball)
     {
         players[currentPlayer].SetPlayerType(ball.GetComponent<BallScript>().BallType);
         players[(currentPlayer  + 1 ) % PLAYER_NO].SetPlayerType(ball.GetComponent<BallScript>().BallType == BallType.SPOT ? BallType.STRIPE : BallType.SPOT);
     }
 
-    // Check if last turn, player won or lost
-    // Heuristics/game rules
+    /// <summary>
+    /// Check if last turn, player won or lost
+    /// Heuristics/game rules
+    /// </summary>
+    /// <returns></returns>
     private bool IsWinCondition()
     {
         // TODO
         return false;
     }
 
-    // Give control back to MainMenu? TBD
+    /// <summary>
+    /// Give control back to MainMenu and let it deal with it? TBD
+    /// </summary>
     private void EndGame()
     {
-
+        // TODO
     }
+    #endregion
 
-    /***************/
-    /*     UI      */
-    /***************/
+    #region UI
 
-    // Meant to be used by the UI object. Returns score of current player
+    /// <summary>
+    /// Meant to be used by the UI object. Returns score of current player
+    /// </summary>
+    /// <returns></returns>
     public int GetPlayerScore()
     {
         return players[currentPlayer].GetScore();
     }
+    #endregion
 }

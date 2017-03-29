@@ -7,7 +7,9 @@ namespace Pool
     {
         private GameManagerScript gm;
 
-        // Will be called right at the end of each turn
+        /// <summary>
+        /// Will be called right at the end of each turn
+        /// </summary>
         public void UpdateUI()
         {
             // TODO
@@ -20,7 +22,19 @@ namespace Pool
              */
         }
 
-        // Just for initialisation. GameManager will call this on construction
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="power"></param>
+        public void UpdatePowerBar(float power)
+        {
+
+        }
+
+        /// <summary>
+        /// Just for initialisation. GameManager will call this on construction
+        /// </summary>
+        /// <param name="newGM"></param>
         public void SetGMReference(GameManagerScript newGM)
         {
             gm = newGM;
