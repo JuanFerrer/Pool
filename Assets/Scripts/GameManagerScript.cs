@@ -76,7 +76,7 @@ public class GameManagerScript : MonoBehaviour
 
     [Header("UI")]
     public GameObject UIPrefab;                         // Prefab of UI object
-    [HideInInspector] public GameObject UI;             // Reference to UI object
+    private GameObject UI;             // Reference to UI object
 
     // FOR DEBUG PURPOSES
     private void Start()
@@ -313,7 +313,7 @@ public class GameManagerScript : MonoBehaviour
     /// </summary>
     private void InstantiateUI()
     {
-
+        //UI.GetComponent<UIScript>().Power = 15;
     }
 
     #endregion
