@@ -41,10 +41,13 @@ public class GameManagerScript : MonoBehaviour
     public Vector3 playerPos;                               // Initial position of player
     private GameObject player;                              // Reference to current player game object
     public float rotationSpeed;                             // Rotation speed 
-    [Range(0, 2000)]public float forceApplied;              // Force applied to ball on hit
+    //[Range(0, 2000)]public float forceApplied;              // Force applied to ball on hit
     [HideInInspector] public bool playerHasControl;         // Flag player is in control
     [HideInInspector] public bool playerIsRepositioning;    // Flag player is repositioning
     public int FirstBallHit { get; set; }                   // Number of ball first hit
+    public float minPower;                                  // Base power
+    public float fullPowerBonus;                            // Amount of extra power on cue strike when charged to full power
+    public float timeToFullPower;                           // Amount of time needed to hold the hi button to charged to full power
 
     static private int PLAYER_NO;                       // Amount of players
     [HideInInspector] public int currentPlayer;         // Reference to current player
@@ -320,7 +323,11 @@ public class GameManagerScript : MonoBehaviour
         player.GetComponent<PlayerControllerScript>().BallType = BallType.CUE;
         player.GetComponent<PlayerControllerScript>().rotSpeed = rotationSpeed;
         player.GetComponent<PlayerControllerScript>().mainCam = mainCam;
-        player.GetComponent<PlayerControllerScript>().forceApplied = forceApplied;
+        //player.GetComponent<PlayerControllerScript>().forceApplied = forceApplied;
+        player.GetComponent<PlayerControllerScript>().minPower = minPower;
+        player.GetComponent<PlayerControllerScript>().fullPowerBonus = fullPowerBonus;
+        player.GetComponent<PlayerControllerScript>().timeToFullPower = timeToFullPower;
+        player.GetComponent<PlayerControllerScript>().charge = 0.0f;
         player.GetComponent<PlayerControllerScript>().gameManager = this.gameObject;
         player.GetComponent<PlayerControllerScript>().camMaxY = camMaxY;
         player.GetComponent<PlayerControllerScript>().camMinY = camMinY;
@@ -398,6 +405,8 @@ public class GameManagerScript : MonoBehaviour
             // Update UI here
             UI.GetComponent<UIScript>().UpdateUI();
         }
+        // Reset power charge
+        player.GetComponent<PlayerControllerScript>().charge = 0.0f;
         player.GetComponent<PlayerControllerScript>().ResetPlayerView();
     }
 
@@ -481,7 +490,7 @@ public class GameManagerScript : MonoBehaviour
             if (ball != null)
             {
                 if (ball.GetComponent<BallScript>().BallType == BallType.CUE)
-                    ball.GetComponent<Rigidbody>().constraints = RigidbodyConstraints.FreezeRotation;
+                    ball.GetComponent<Rigidbody>().constraints = RigidbodyConstraints.FreezeRotation | RigidbodyConstraints.FreezePositionY;
                 else ball.GetComponent<Rigidbody>().constraints = RigidbodyConstraints.FreezeAll;
             }
         }

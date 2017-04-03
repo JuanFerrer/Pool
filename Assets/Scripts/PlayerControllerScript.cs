@@ -9,7 +9,12 @@ namespace Pool
         [HideInInspector] public float rotSpeed;
         [HideInInspector] public GameObject mainCam;
         [HideInInspector] public float forceApplied;
+        [HideInInspector] public float minPower;            // Base power.
+        [HideInInspector] public float fullPowerBonus;      // Amount of extra power on cue strike when charged to full power.
+	    [HideInInspector] public float timeToFullPower;     // Amount of time needed to hold the hi button to charged to full power.
+	    [HideInInspector] public float charge;              // Amount shot is currently charged. as a 0 to 1 value.
         [HideInInspector] public GameObject gameManager;
+        private bool takeShot = false;                      // End frame flag. Shot is taken with current charge.
 
         [HideInInspector] public float camMaxY;
         [HideInInspector] public float camMinY;
@@ -34,10 +39,25 @@ namespace Pool
                         Tilt(Direction.DOWN);
 
                     // Hit
-                    if (Input.GetKeyDown(KeyCode.Space))
+                    if (Input.GetKey(KeyCode.Space))
                     {
-                        HitBall();
+                        charge += Time.deltaTime * (1.0f / timeToFullPower);
+                        Debug.Log(charge); // TO DO: change with update ui power bar.
+                        // if full power...
+                        if (charge >= 1.0f)
+                        {
+                            charge = 1.0f; // just incase it's over
+                            takeShot = true;
+                        }
                     }
+                        if (Input.GetKeyUp(KeyCode.Space))
+                        {
+                            takeShot = true;
+                        }
+                        if (takeShot)
+                        {
+                            HitBall(minPower + (charge * fullPowerBonus));
+                        }
 
                     UpdateVisualAid();
                 }
@@ -67,7 +87,7 @@ namespace Pool
                     Move(dir);
 
                     // Stay in this position
-                    if (Input.GetKeyDown(KeyCode.Space))
+                    if (Input.GetKeyUp(KeyCode.Space))
                     {
                         gameManager.GetComponent<GameManagerScript>().FinishReposition();
                         gameManager.GetComponent<GameManagerScript>().UnfreezeBalls();
@@ -130,17 +150,19 @@ namespace Pool
         /// <summary>
         /// Apply forward force to ball
         /// </summary>
-        void HitBall()
+        void HitBall(float power)
         {
             isMoving = true;
             Vector3 facingDirection = transform.forward;
-            GetComponent<Rigidbody>().AddForce(facingDirection * forceApplied, ForceMode.Impulse);
+            GetComponent<Rigidbody>().AddForce(facingDirection * power, ForceMode.Impulse);
             mainCam.transform.SetParent(null);
 
             gameManager.GetComponent<GameManagerScript>().playerHasControl = false;
 
             audioSource.clip = cueHit;
             audioSource.Play();
+
+            takeShot = false;
 
             gameManager.GetComponent<GameManagerScript>().FirstBallHit = 0;
             mainCam.GetComponent<CameraScript>().BallToViewpoint();
