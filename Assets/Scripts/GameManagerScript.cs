@@ -11,10 +11,12 @@ using Pool; // Pool namespace
 
 public class GameManagerScript : MonoBehaviour
 {
-    private bool GameReady { get; set; }
+    public bool GameReady { get; set; }
     public bool IsInitialReposition { get; set; }
     private bool CueBallPotted { get; set; }
+    private bool BlackBallPotted{ get; set; }
     public enum GameType { ENGLISH_POOL, AMERICAN_POOL, SNOOKER };
+    private bool IsEndGame { get; set; }
 
     [Header("Table")]
     public GameObject tablePrefab;                              // Prefab of table
@@ -42,11 +44,13 @@ public class GameManagerScript : MonoBehaviour
     [Range(0, 2000)]public float forceApplied;              // Force applied to ball on hit
     [HideInInspector] public bool playerHasControl;         // Flag player is in control
     [HideInInspector] public bool playerIsRepositioning;    // Flag player is repositioning
+    public int FirstBallHit { get; set; }                   // Number of ball first hit
 
     static private int PLAYER_NO;                       // Amount of players
-    [HideInInspector] public int currentPlayer;         // Reference to current players
+    [HideInInspector] public int currentPlayer;         // Reference to current player
+    [HideInInspector] public int winnerPlayer;          // Reference to winner player
     [HideInInspector] Player[] players;                 // References to all players
-    private bool IsChangePlayer { get; set; }       // Player needs to change on next turn
+    private bool IsChangePlayer { get; set; }           // Player needs to change on next turn
     private bool ShouldRepositionCueBall { get; set; }  // Cue ball was potted flag
     private bool IsControlToPlayer { get; set; }        // Player should regain control
 
@@ -99,15 +103,18 @@ public class GameManagerScript : MonoBehaviour
     /// <summary>
     void FixedUpdate()
     {
+        // Are we ready to play?
         if (GameReady)
         {
             if (mainCam.GetComponent<CameraScript>().IsReady && IsControlToPlayer)
                 GiveControlToPlayer();
             else if (!playerHasControl && !AnyBallMoving() && !playerIsRepositioning && mainCam.GetComponent<CameraScript>().IsReady)
             {
-
                 // Balls have stopped. Let's check what happened and act accordingly
                 CheckPottedBalls();
+
+                // Check what ball we hit first
+                CheckFirstHitBall();
 
                 //UI.GetComponent<UIScript>().UpdateUI();
 
@@ -123,9 +130,18 @@ public class GameManagerScript : MonoBehaviour
                 IsControlToPlayer = true;
             }
 
-            if (IsWinCondition())
+            if (BlackBallPotted)
             {
                 EndGame();
+            }
+        }
+        else
+        {
+            Debug.Log("Show title");
+
+            if (Input.GetKey(KeyCode.Escape))
+            {
+                UnityEngine.SceneManagement.SceneManager.LoadScene(0);
             }
         }
     }
@@ -142,6 +158,8 @@ public class GameManagerScript : MonoBehaviour
     {
         GameReady = false;
         CueBallPotted = false;
+        BlackBallPotted = false;
+        IsEndGame = false;
         IsChangePlayer = false;
         ShouldRepositionCueBall = true;
         IsControlToPlayer = false;
@@ -357,7 +375,7 @@ public class GameManagerScript : MonoBehaviour
         if (CueBallPotted)
         {
             ShouldRepositionCueBall = true;
-            player.GetComponent<Rigidbody>().transform.position = playerPos;
+            //player.GetComponent<Rigidbody>().transform.position = playerPos;
             CueBallPotted = false;
         }
         if (ShouldRepositionCueBall)
@@ -419,11 +437,21 @@ public class GameManagerScript : MonoBehaviour
     }
 
     /// <summary>
-    /// Make nextBall be the appropriate for the player
+    /// See if player has potted all of his balls
     /// </summary>
     private void SelectNextBallForPlayer()
     {
-        // TODO
+        // Player has a ball type assigned, and it's not the black ball
+        if (players[currentPlayer].GetPlayerType() != BallType.BLACK && players[currentPlayer].GetPlayerType() != BallType.NONE)
+        {
+            int firstBallPlayer = players[currentPlayer].GetPlayerType() == BallType.SPOT? 1 : 9;   // First ball inclusive
+            int lastBallPlayer = players[currentPlayer].GetPlayerType() == BallType.SPOT ? 7 : 15;  // Last ball inclusive 
+            for (int i = firstBallPlayer; i <= lastBallPlayer; ++i)
+                if (balls[i] != null) return;
+            // All balls potted
+            players[currentPlayer].SetPlayerType(BallType.BLACK);
+        }
+        // Then ignore it
     }
 
     /// <summary>
@@ -505,17 +533,15 @@ public class GameManagerScript : MonoBehaviour
             // Potting black ball
             if (ball.GetComponent<BallScript>().BallType == BallType.BLACK)
             {
-                // TODO
-                // flag shouldEndGame = true;
-                return;
+                BlackBallPotted = true;
             }
 
             // Potting cue ball
             if (ball.GetComponent<BallScript>().BallType == BallType.CUE)
             {
-                // TODO
                 IsChangePlayer = true;
                 CueBallPotted = true;
+                player.GetComponent<Rigidbody>().transform.position = playerPos;
             }
         }
 
@@ -523,6 +549,14 @@ public class GameManagerScript : MonoBehaviour
         RemoveBalls();
 
         ResetBallList();
+    }
+
+    /// <summary>
+    /// Make sure we change player if the first ball hit was not the player's type
+    /// </summary>
+    public void CheckFirstHitBall()
+    {
+        IsChangePlayer = players[currentPlayer].GetPlayerType() != BallType.NONE && players[currentPlayer].GetPlayerType() == BallScript.BallTypeFromNo(FirstBallHit);            
     }
 
     /// <summary>
@@ -561,9 +595,16 @@ public class GameManagerScript : MonoBehaviour
     /// Heuristics/game rules
     /// </summary>
     /// <returns></returns>
-    private bool IsWinCondition()
+    private bool CurrentPlayerIsWinner()
     {
-        // TODO
+        // Was the black ball the next ball for player?
+        if (players[currentPlayer].GetPlayerType() == BallType.BLACK)
+        {
+            // Did she also pot the cue ball?
+            if (CueBallPotted)
+                return false;
+            return true;
+        }
         return false;
     }
 
@@ -572,7 +613,9 @@ public class GameManagerScript : MonoBehaviour
     /// </summary>
     private void EndGame()
     {
-        // TODO
+        winnerPlayer = CurrentPlayerIsWinner()? currentPlayer : (currentPlayer + 1) % PLAYER_NO;
+        Debug.Log("Player " + winnerPlayer + " wins!");
+        GameReady = false;
     }
     #endregion
 
