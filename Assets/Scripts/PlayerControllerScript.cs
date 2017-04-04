@@ -9,8 +9,12 @@ namespace Pool
         [HideInInspector] public float rotSpeed;
         [HideInInspector] public GameObject mainCam;
         [HideInInspector] public float forceApplied;
+        [HideInInspector] public float minPower;            // Base power.
+        [HideInInspector] public float fullPowerBonus;      // Amount of extra power on cue strike when charged to full power.
+	    [HideInInspector] public float timeToFullPower;     // Amount of time needed to hold the hi button to charged to full power.
+	    [HideInInspector] public float charge;              // Amount shot is currently charged. as a 0 to 1 value.
         [HideInInspector] public GameObject gameManager;
-        [HideInInspector] public GameObject nextBall;       // Reference to next ball game object
+        private bool takeShot = false;                      // End frame flag. Shot is taken with current charge.
 
         [HideInInspector] public float camMaxY;
         [HideInInspector] public float camMinY;
@@ -20,65 +24,82 @@ namespace Pool
         // Update is called once per frame
         void FixedUpdate()
         {
-            // Player aiming ball
-            if (gameManager.GetComponent<GameManagerScript>().playerHasControl)
+            if (gameManager.GetComponent<GameManagerScript>().GameReady)
             {
-                if (Input.GetKey(KeyCode.D))
-                    Rotate(Direction.RIGHT);
-                else if (Input.GetKey(KeyCode.A))
-                    Rotate(Direction.LEFT);
-                if (Input.GetKey(KeyCode.W))
-                    Tilt(Direction.UP);
-                else if (Input.GetKey(KeyCode.S))
-                    Tilt(Direction.DOWN);
-
-                // Hit
-                if (Input.GetKeyDown(KeyCode.Space))
+                // Player aiming ball
+                if (gameManager.GetComponent<GameManagerScript>().playerHasControl)
                 {
-                    HitBall();
+                    if (Input.GetKey(KeyCode.D))
+                        Rotate(Direction.RIGHT);
+                    else if (Input.GetKey(KeyCode.A))
+                        Rotate(Direction.LEFT);
+                    if (Input.GetKey(KeyCode.W))
+                        Tilt(Direction.UP);
+                    else if (Input.GetKey(KeyCode.S))
+                        Tilt(Direction.DOWN);
+
+                    // Hit
+                    if (Input.GetKey(KeyCode.Space))
+                    {
+                        charge += Time.deltaTime * (1.0f / timeToFullPower);
+                        Debug.Log(charge); // TO DO: change with update ui power bar.
+                        // if full power...
+                        if (charge >= 1.0f)
+                        {
+                            charge = 1.0f; // just incase it's over
+                            takeShot = true;
+                        }
+                    }
+                        if (Input.GetKeyUp(KeyCode.Space))
+                        {
+                            takeShot = true;
+                        }
+                        if (takeShot)
+                        {
+                            HitBall(minPower + (charge * fullPowerBonus));
+                        }
+
+                    UpdateVisualAid();
                 }
 
-                UpdateVisualAid();
-            }
-
-            // Player repositioning ball
-            else if (gameManager.GetComponent<GameManagerScript>().playerIsRepositioning)
-            {
-
-                Vector3 dir = new Vector3();
-
-                if (Input.GetKey(KeyCode.D))
-                    dir.x = 1;
-                else if (Input.GetKey(KeyCode.A))
-                    dir.x = -1;
-                if (Input.GetKey(KeyCode.W))
+                // Player repositioning ball
+                else if (gameManager.GetComponent<GameManagerScript>().playerIsRepositioning)
                 {
-                    if (gameManager.GetComponent<GameManagerScript>().IsInitialReposition)
+                    Vector3 dir = new Vector3();
+
+                    if (Input.GetKey(KeyCode.D))
+                        dir.x = 1;
+                    else if (Input.GetKey(KeyCode.A))
+                        dir.x = -1;
+                    if (Input.GetKey(KeyCode.W))
                     {
-                        if (GetComponent<Rigidbody>().transform.position.z < tableLineZ)
+                        if (gameManager.GetComponent<GameManagerScript>().IsInitialReposition)
+                        {
+                            if (GetComponent<Rigidbody>().transform.position.z < tableLineZ)
+                                dir.z = 1;
+                        }
+                        else
                             dir.z = 1;
                     }
-                    else
-                        dir.z = 1;
+                    else if (Input.GetKey(KeyCode.S))
+                        dir.z = -1;
+
+                    Move(dir);
+
+                    // Stay in this position
+                    if (Input.GetKeyUp(KeyCode.Space))
+                    {
+                        gameManager.GetComponent<GameManagerScript>().FinishReposition();
+                        gameManager.GetComponent<GameManagerScript>().UnfreezeBalls();
+                    }
                 }
-                else if (Input.GetKey(KeyCode.S))
-                    dir.z = -1;
 
-                Move(dir);
-
-                // Stay in this position
-                if (Input.GetKeyDown(KeyCode.Space))
+                // Toggle view
+                if (Input.GetKeyDown(KeyCode.Tab))
                 {
-                gameManager.GetComponent<GameManagerScript>().FinishReposition();
+                    gameManager.GetComponent<GameManagerScript>().ToggleCamera();
                 }
             }
-
-            // Toggle view
-            if (Input.GetKeyDown(KeyCode.Tab))
-            {
-                gameManager.GetComponent<GameManagerScript>().ToggleCamera();
-            }
-
         }
 
         /// <summary>
@@ -129,18 +150,24 @@ namespace Pool
         /// <summary>
         /// Apply forward force to ball
         /// </summary>
-        void HitBall()
+        void HitBall(float power)
         {
             isMoving = true;
             Vector3 facingDirection = transform.forward;
-            GetComponent<Rigidbody>().AddForce(facingDirection * forceApplied, ForceMode.Impulse);
+            GetComponent<Rigidbody>().AddForce(facingDirection * power, ForceMode.Impulse);
             mainCam.transform.SetParent(null);
 
             gameManager.GetComponent<GameManagerScript>().playerHasControl = false;
 
             audioSource.clip = cueHit;
             audioSource.Play();
+
+            takeShot = false;
+
+            gameManager.GetComponent<GameManagerScript>().FirstBallHit = 0;
+            mainCam.GetComponent<CameraScript>().BallToViewpoint();
         }
+
 
         /// <summary>
         /// Draw visual aid on the floor
@@ -148,6 +175,19 @@ namespace Pool
         void UpdateVisualAid()
         {
             //TO DO
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="other"></param>
+        void OnCollisionEnter(Collision other)
+        {
+            if (other.gameObject.tag == "Ball" && gameManager.GetComponent<GameManagerScript>().FirstBallHit == 0)
+            {
+                gameManager.GetComponent<GameManagerScript>().FirstBallHit = other.gameObject.GetComponent<BallScript>().BallNo;
+                Debug.Log("You hit ball number " + gameManager.GetComponent<GameManagerScript>().FirstBallHit);
+            }
         }
     }
 }

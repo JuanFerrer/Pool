@@ -1,6 +1,4 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEngine.SceneManagement;
 
 public class MenuNavigationScript : MonoBehaviour {
@@ -8,6 +6,7 @@ public class MenuNavigationScript : MonoBehaviour {
     // Use this for initialization
     public void LoadByIndex(int sceneIndex)
     {
+        Time.timeScale = 1;
         SceneManager.LoadScene(sceneIndex);
     }
 
