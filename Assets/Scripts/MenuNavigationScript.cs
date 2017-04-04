@@ -6,6 +6,7 @@ public class MenuNavigationScript : MonoBehaviour {
     // Use this for initialization
     public void LoadByIndex(int sceneIndex)
     {
+        Time.timeScale = 1;
         SceneManager.LoadScene(sceneIndex);
     }
 

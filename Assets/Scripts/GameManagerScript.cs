@@ -48,6 +48,7 @@ public class GameManagerScript : MonoBehaviour
     public float minPower;                                  // Base power
     public float fullPowerBonus;                            // Amount of extra power on cue strike when charged to full power
     public float timeToFullPower;                           // Amount of time needed to hold the hi button to charged to full power
+    public float charge;
 
     static private int PLAYER_NO;                       // Amount of players
     [HideInInspector] public int currentPlayer;         // Reference to current player
@@ -113,6 +114,9 @@ public class GameManagerScript : MonoBehaviour
                 GiveControlToPlayer();
             else if (!playerHasControl && !AnyBallMoving() && !playerIsRepositioning && mainCam.GetComponent<CameraScript>().IsReady)
             {
+                // At the end of each turn, players will change unless the current players pots one of his balls
+                IsChangePlayer = true;
+
                 // Balls have stopped. Let's check what happened and act accordingly
                 CheckPottedBalls();
 
@@ -327,7 +331,7 @@ public class GameManagerScript : MonoBehaviour
         player.GetComponent<PlayerControllerScript>().minPower = minPower;
         player.GetComponent<PlayerControllerScript>().fullPowerBonus = fullPowerBonus;
         player.GetComponent<PlayerControllerScript>().timeToFullPower = timeToFullPower;
-        player.GetComponent<PlayerControllerScript>().charge = 0.0f;
+        player.GetComponent<PlayerControllerScript>().charge = charge;
         player.GetComponent<PlayerControllerScript>().gameManager = this.gameObject;
         player.GetComponent<PlayerControllerScript>().camMaxY = camMaxY;
         player.GetComponent<PlayerControllerScript>().camMinY = camMinY;
@@ -394,7 +398,6 @@ public class GameManagerScript : MonoBehaviour
         else
         {
             playerHasControl = true;
-            IsChangePlayer = true;  // At the end of each turn, players will change unless the current players pots one of his balls
             //player.GetComponent<PlayerControllerScript>().ResetPlayerView();
 
             //mainCam.transform.SetParent(player.transform);
@@ -402,10 +405,9 @@ public class GameManagerScript : MonoBehaviour
             // Remove player constraints
             player.GetComponent<Rigidbody>().constraints = RigidbodyConstraints.FreezePositionY;
 
-            // Update UI here
-            UI.GetComponent<UIScript>().UpdateUI();
         }
         // Reset power charge
+        ChangePower(0);
         player.GetComponent<PlayerControllerScript>().charge = 0.0f;
         player.GetComponent<PlayerControllerScript>().ResetPlayerView();
     }
@@ -437,9 +439,10 @@ public class GameManagerScript : MonoBehaviour
     /// </summary>
     private void ChangePlayer()
     {
-        // TODO
         currentPlayer = (currentPlayer + 1) % PLAYER_NO;
         Debug.Log("Turn of player " + currentPlayer);
+
+        UI.GetComponent<UIScript>().UpdatePlayer(players[currentPlayer]);
 
         SelectNextBallForPlayer();
         IsChangePlayer = false;
@@ -511,6 +514,12 @@ public class GameManagerScript : MonoBehaviour
 
     #region LOGIC
 
+    public void ChangePower(float val)
+    {
+        UI.GetComponent<UIScript>().SetCuePower(val);
+    }
+
+
     /// <summary>
     /// Reaction to potting a ball
     /// </summary>
@@ -518,6 +527,7 @@ public class GameManagerScript : MonoBehaviour
     public void BallPotted(GameObject ball)
     {
         pottedBalls.Add(ball);
+        UI.GetComponent<UIScript>().PutOnRack(ball.GetComponent<BallScript>().BallNo);
     }
 
     /// <summary>
@@ -527,22 +537,11 @@ public class GameManagerScript : MonoBehaviour
     {
         foreach (GameObject ball in pottedBalls)
         {
-            // Player does not have a ball type. We assign then this type
-            if (players[currentPlayer].GetPlayerType() == BallType.NONE)
-            {
-                IsChangePlayer = false;
-                SetPlayersType(ball);
-                Debug.Log("Player " + currentPlayer + " plays with " + GetCurrentPlayer().GetPlayerType());
-            }
-            else if (players[currentPlayer].GetPlayerType() == ball.GetComponent<BallScript>().BallType)
-            {
-                IsChangePlayer = false;
-            }
-
             // Potting black ball
             if (ball.GetComponent<BallScript>().BallType == BallType.BLACK)
             {
                 BlackBallPotted = true;
+                break;
             }
 
             // Potting cue ball
@@ -551,7 +550,23 @@ public class GameManagerScript : MonoBehaviour
                 IsChangePlayer = true;
                 CueBallPotted = true;
                 player.GetComponent<Rigidbody>().transform.position = playerPos;
+                break;
             }
+
+            // Player does not have a ball type. We assign them this type
+            if (players[currentPlayer].GetPlayerType() == BallType.NONE)
+            {
+                IsChangePlayer = false;
+                SetPlayersType(ball);
+                Debug.Log("Player " + currentPlayer + " plays with " + GetCurrentPlayer().GetPlayerType());
+                
+            }
+
+            // Player potted one of his balls
+            else if (players[currentPlayer].GetPlayerType() == ball.GetComponent<BallScript>().BallType)
+            {
+                IsChangePlayer = false;              
+            }               
         }
 
         // Remove each ball
@@ -565,7 +580,10 @@ public class GameManagerScript : MonoBehaviour
     /// </summary>
     public void CheckFirstHitBall()
     {
-        IsChangePlayer = players[currentPlayer].GetPlayerType() != BallType.NONE && players[currentPlayer].GetPlayerType() == BallScript.BallTypeFromNo(FirstBallHit);            
+        if (FirstBallHit == 0 || (players[currentPlayer].GetPlayerType() != BallType.NONE && players[currentPlayer].GetPlayerType() != BallScript.BallTypeFromNo(FirstBallHit)))
+        {
+            ShouldRepositionCueBall = true;
+        }
     }
 
     /// <summary>
@@ -638,5 +656,9 @@ public class GameManagerScript : MonoBehaviour
     {
         return players[currentPlayer].GetScore();
     }
+
+
+
+    
     #endregion
 }
