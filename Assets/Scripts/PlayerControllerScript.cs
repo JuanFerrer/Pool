@@ -21,9 +21,12 @@ namespace Pool
 
         private float tableLineZ = -6.0f;
 
+<<<<<<< HEAD
+=======
        
 
 
+>>>>>>> refs/remotes/origin/master
         // Update is called once per frame
         void FixedUpdate()
         {
@@ -45,10 +48,14 @@ namespace Pool
                     if (Input.GetKey(KeyCode.Space))
                     {
                         charge += Time.deltaTime * (1.0f / timeToFullPower);
+<<<<<<< HEAD
+                        Debug.Log(charge); // TO DO: change with update ui power bar.
+=======
                         //Debug.Log(charge); // TO DO: change with update ui power bar.
 
                         gameManager.GetComponent<GameManagerScript>().ChangePower(charge);
 
+>>>>>>> refs/remotes/origin/master
                         // if full power...
                         if (charge >= 1.0f)
                         {

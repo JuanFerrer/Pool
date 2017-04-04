@@ -6,6 +6,10 @@ public class MenuNavigationScript : MonoBehaviour {
     // Use this for initialization
     public void LoadByIndex(int sceneIndex)
     {
+<<<<<<< HEAD
+        Time.timeScale = 1;
+=======
+>>>>>>> refs/remotes/origin/master
         SceneManager.LoadScene(sceneIndex);
     }
 

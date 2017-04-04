@@ -18,6 +18,8 @@ namespace Pool
         GameObject GameManager;
         bool Move = true;
 
+<<<<<<< HEAD
+=======
         private void Start()
         {
             Left = GameObject.Find("LeftText").GetComponent<Text>();
@@ -46,6 +48,7 @@ namespace Pool
             Move = !Move;
         }
 
+>>>>>>> refs/remotes/origin/master
         /// <summary>
         /// Will be called right at the end of each turn
         /// </summary>
@@ -61,22 +64,37 @@ namespace Pool
              */
         }
 
+<<<<<<< HEAD
+=======
         
 
+>>>>>>> refs/remotes/origin/master
         /// <summary>
         /// 
         /// </summary>
         /// <param name="power"></param>
         public void SetCuePower(float power)
         {
+<<<<<<< HEAD
+
+=======
             powerBar = GetComponentInChildren<Slider>();
             powerBar.value = power;
+>>>>>>> refs/remotes/origin/master
         }
 
         /// <summary>
         /// 
         /// </summary>
         /// <param name="ballNo"></param>
+<<<<<<< HEAD
+        public void SetPottedBall(int ballNo)
+        {
+
+        }
+
+
+=======
         public void PutOnRack(int ballNo)
         {
             if (ballNo > 0 && ballNo < 15)
@@ -92,6 +110,7 @@ namespace Pool
         }
 
         
+>>>>>>> refs/remotes/origin/master
 
         /// <summary>
         /// Just for initialisation. GameManager will call this on construction
