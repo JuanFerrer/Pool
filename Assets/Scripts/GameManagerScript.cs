@@ -48,6 +48,7 @@ public class GameManagerScript : MonoBehaviour
     public float minPower;                                  // Base power
     public float fullPowerBonus;                            // Amount of extra power on cue strike when charged to full power
     public float timeToFullPower;                           // Amount of time needed to hold the hi button to charged to full power
+    public float charge;
 
     static private int PLAYER_NO;                       // Amount of players
     [HideInInspector] public int currentPlayer;         // Reference to current player
@@ -327,7 +328,7 @@ public class GameManagerScript : MonoBehaviour
         player.GetComponent<PlayerControllerScript>().minPower = minPower;
         player.GetComponent<PlayerControllerScript>().fullPowerBonus = fullPowerBonus;
         player.GetComponent<PlayerControllerScript>().timeToFullPower = timeToFullPower;
-        player.GetComponent<PlayerControllerScript>().charge = 0.0f;
+        player.GetComponent<PlayerControllerScript>().charge = charge;
         player.GetComponent<PlayerControllerScript>().gameManager = this.gameObject;
         player.GetComponent<PlayerControllerScript>().camMaxY = camMaxY;
         player.GetComponent<PlayerControllerScript>().camMinY = camMinY;
@@ -406,6 +407,7 @@ public class GameManagerScript : MonoBehaviour
             UI.GetComponent<UIScript>().UpdateUI();
         }
         // Reset power charge
+        ChangePower(0);
         player.GetComponent<PlayerControllerScript>().charge = 0.0f;
         player.GetComponent<PlayerControllerScript>().ResetPlayerView();
     }
@@ -429,6 +431,7 @@ public class GameManagerScript : MonoBehaviour
     /// <returns></returns>
     private bool ShouldChangePlayer()
     {
+        UI.GetComponent<UIScript>().moveMade();
         return IsChangePlayer;
     }
 
@@ -437,6 +440,8 @@ public class GameManagerScript : MonoBehaviour
     /// </summary>
     private void ChangePlayer()
     {
+        
+
         // TODO
         currentPlayer = (currentPlayer + 1) % PLAYER_NO;
         Debug.Log("Turn of player " + currentPlayer);
@@ -511,6 +516,12 @@ public class GameManagerScript : MonoBehaviour
 
     #region LOGIC
 
+    public void ChangePower(float val)
+    {
+        UI.GetComponent<UIScript>().SetCuePower(val);
+    }
+
+
     /// <summary>
     /// Reaction to potting a ball
     /// </summary>
@@ -518,6 +529,7 @@ public class GameManagerScript : MonoBehaviour
     public void BallPotted(GameObject ball)
     {
         pottedBalls.Add(ball);
+        UI.GetComponent<UIScript>().PutOnRack(ball.GetComponent<BallScript>().BallNo);
     }
 
     /// <summary>
@@ -533,10 +545,13 @@ public class GameManagerScript : MonoBehaviour
                 IsChangePlayer = false;
                 SetPlayersType(ball);
                 Debug.Log("Player " + currentPlayer + " plays with " + GetCurrentPlayer().GetPlayerType());
+                
             }
             else if (players[currentPlayer].GetPlayerType() == ball.GetComponent<BallScript>().BallType)
             {
                 IsChangePlayer = false;
+
+               
             }
 
             // Potting black ball
@@ -552,6 +567,9 @@ public class GameManagerScript : MonoBehaviour
                 CueBallPotted = true;
                 player.GetComponent<Rigidbody>().transform.position = playerPos;
             }
+
+            
+            
         }
 
         // Remove each ball
@@ -638,5 +656,9 @@ public class GameManagerScript : MonoBehaviour
     {
         return players[currentPlayer].GetScore();
     }
+
+
+
+    
     #endregion
 }
